@@ -1,0 +1,57 @@
+＜unimonのAPI機能拡張＞
+
+RST 30HによるAPIを拡張してあります。unimonに元々持っていて便利そうな機能や
+10進数文字列生成などを追加してあります。
+RAM12Kバージョンには、TIMER0によるストップウォッチ機能を入れました。
+また、ストップウォッチ表示させるプログラムを作っているときに、10進数変換
+とか、除算機能が必要となったので、その機能もAPIとして持たせました。
+詳細はソースを見てください。まだテストしてないのもあるので、虫はいると
+思います。
+
+<APITBL>
+APITBL:
+	DW	API00		; 00: CSTART
+	DW	API01		; 01: WSTART
+	DW	CONOUT		; 02: CONOUT
+	DW	STROUT		; 03: STROUT
+	DW	CONIN		; 04: CONIN
+	DW	CONST		; 05: CONST
+	DW	API06		; 06: PSPEC
+	DW	HEXOUT4		; 07: CONOUT HEX4bytes: input HL
+	DW	HEXOUT2		; 08: CONOUT HEX2bytes: input A
+	DW	HEXOUT1		; 09: CONOUT HEX1byte : input A
+	DW	CLR_CRT		; 10: Clear screen (ESC+[2)
+	DW	GETLIN0		; 11: GET a line (input HL : input buffer address)
+	DW	SKIPSP		; 12: SKIP Spase
+	DW	CRLF		; 13: CONOUT CRLF
+	DW	UPPER		; 14: Lower to UPPER
+	DW	RDHEX		; 15: get hex number from chr buffer
+				;     input  HL : hex string buffer
+				;     output DE : hex number
+				;            CF=1 : error, C, A = hex counts(1-4)
+	DW	DEC_STR		; 16: get decimal srtings
+				; input hl : return storings buffer addr.
+				;       de : 16bit binary
+	DW	DIV16_8		; 17; division 16bit / 8bit
+	DW	MUL_8		; 18: multiply 8bit * 8bit
+
+＜RAM12Kバージョンのみ追加＞
+	IF RAM12K
+	DW	STOPW		; 19: stopwatch
+	ELSE
+	DW	no_operate	; 19: no operation : if RAM12K=0
+	ENDIF
+
+＜Rev B0.2で追加＞
+	dw	get_disasm_st	; 20: dis assemble string
+						;     input: HL buffer. need 42bytes
+						;     output : DE : next MC address
+						;              A  : disassembled MC size
+
+
+< STOPW >
+	; (input) A = 0 : start timer, (output) none
+	; (input) A = 1 : stop timer,  (output) BC : msec time, DE : Sec time
+	; (input) A = 2 : lap timer,   (output) BC : msec time, DE : Sec time
+	; (input) A = 3 : clear timer counter,  (output) none
+
