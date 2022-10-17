@@ -1571,23 +1571,29 @@ DD_2NDTBL_E:
 
 DUMP:
 	INC	HL
+	LD	A,(HL)
+	cp	'I'
+	JP	Z,disassemble
 	CALL	SKIPSP
 	CALL	RDHEX		; 1st arg.
-	jr	nc, DP0
-	;; No arg. chk
-	CALL	SKIPSP
-	LD	A,(HL)
-	OR	A
-	JP	NZ,disassemble
+	jr	c, DP0
+	;; 1st arg. found
+	LD	(DSADDR),DE
+	jr	dp00
+
+DP0:	;; No arg. chk
+
+	push	hl
 	LD	HL,(DSADDR)
 	LD	BC,128
 	ADD	HL,BC
 	LD	(DEADDR),HL
-	JR	DPM
+	pop	hl
+	LD	A,(HL)
+	OR	A
+	JR	z, DPM		; no arg.
 
-	;; 1st arg. found
-DP0:
-	LD	(DSADDR),DE
+dp00:
 	CALL	SKIPSP
 	LD	A,(HL)
 	CP	','
@@ -1723,9 +1729,6 @@ DPB2:
 ; DI[<address>][,s<steps>|<end address>]
 
 disassemble:
-	cp	'I'
-	jp	nz, ERR
-	
 	INC	HL
 	CALL	SKIPSP
 	CALL	RDHEX		; 1st arg.
@@ -1739,15 +1742,17 @@ di_nxt:
 	jr	NZ, chk_DI1	; ',' check
 
 ; No arg
-	ld	a, 10
+	ld	h, 0
+	ld	l, 10
+	ld	a, l
 	ld	(dasm_stpf), a	; set step flag
-	ld	(dasm_ed), a	; set 10 steps
+	ld	(dasm_ed), hl	; set 10 steps
 	jr	DISASM_go
 
 ; 1st arg
 get_DI1:
 	ld	(dasm_adr), de	; save start address
-	INC	HL
+;	INC	HL
 	jr	di_nxt
 
 chk_DI1:
