@@ -4763,6 +4763,8 @@ GL0:	; input hl
 	PUSH	BC
 	push	hl
 	LD	B,0
+
+GL00:
 	CALL	CONIN
 	CP	CR
 	JR	Z,GLE
@@ -4773,29 +4775,29 @@ GL0:	; input hl
 	CP	DEL
 	JR	Z,GLB
 	CP	' '
-	JR	C,GL0
+	JR	C,GL00
 	CP	80H
-	JR	NC,GL0
+	JR	NC,GL00
 	LD	C,A
 	LD	A,B
 	CP	BUFLEN-1
-	JR	NC,GL0	; Too long
+	JR	NC,GL00	; Too long
 	INC	B
 	LD	A,C
 	CALL	CONOUT
-	cp	"a"
+	cp	'a'
 	jr	c, GL1
-	cp	"z"+1
+	cp	'z'+1
 	jr	nc, GL1
 	and	0DFH	; make upper code
 GL1:
 	LD	(HL),A
 	INC	HL
-	JR	GL0
+	JR	GL00
 GLB:
 	LD	A,B
 	AND	A
-	JR	Z,GL0
+	JR	Z,GL00
 	DEC	B
 	DEC	HL
 	LD	A,08H
@@ -4804,7 +4806,7 @@ GLB:
 	CALL	CONOUT
 	LD	A,08H
 	CALL	CONOUT
-	JR	GL0
+	JR	GL00
 GLE:
 	CALL	CRLF
 	LD	(HL),00H
@@ -5493,7 +5495,7 @@ cmd_hlp:	db	"? :Command Help", CR, LF
 		db	"R[<reg>] :Set or Dump register", CR, LF
 		db	"G[<adr>][,<stop adr>] :Go and Stop", CR, LF
 		db	"L :Load HexFile", CR, LF
-		db	"P[I|S] :Save HexFile(I:Intel,S:Motorola", CR, LF
+		db	"P[I|S] :Save HexFile(I:Intel,S:Motorola)", CR, LF
 		db	"#L|<num> :Launch program", CR, LF
 		db	"B[1|2[,<adr>]] :Set or List Break Point", CR, LF
 		db	"BC[1|2] :Clear Break Point", CR, LF
