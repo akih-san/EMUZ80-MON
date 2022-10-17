@@ -11,22 +11,27 @@
 ;
 
 RAM12K = 1
+RAM8K = 0
+RAM4K = 0
+
+	IF	RAM12K
+STACKU	equ	0EEC0H	; user stack
+RAMTOP	EQU	0C000H
+	ENDIF
+
+	IF	RAM8K
+STACKU	equ	9EC0H	; user stack
+RAMTOP	EQU	08000H
+	ENDIF
+
+	IF	RAM4K
+; ORIGINAL MEMORY MAP for PIC18F47Q43
+STACKU	equ	8EC0H	; user stack
+RAMTOP	EQU	08000H
+	ENDIF
 
 ;	MEMORY ASIGN
 ROMTOP	EQU	2000H		; 0000H - 1FFFH for unimon
-
-	IF RAM12K
-RAMTOP	EQU	0C000H
-	ELSE
-RAMTOP	EQU	08000H
-	ENDIF
-;
-;	UART REGISTER ADDRESS
-UARTDR	EQU	0FF00H	; UART DATA REGISTOR
-UARTCR	EQU	0FF01H	; UART CONTROL REGISTOR
-
-; Universal Monitor CSTART
-UNI_CST	EQU	0000H
 
 ;
 ;	RESET (RST 00H)
@@ -229,20 +234,21 @@ COPY:	LD	A,(DE)		; Get source
 	CALL	PRCRLF		; Output CRLF
 	LD	(BUFFER+72+1),A	; Mark end of buffer
 	LD	(PROGST),A	; Initialise program area
-MSIZE:	LD	HL,STLOOK	; Point to start of RAM
-MLOOP:	INC	HL		; Next byte
-	LD	A,H		; Above address FFFF ?
-	OR	L
-	JP	Z,SETTOP	; Yes - 64K RAM
-	LD	A,(HL)		; Get contents
-	LD	B,A		; Save it
-	CPL			; Flip all bits
-	LD	(HL),A		; Put it back
-	CP	(HL)		; RAM there if same
-	LD	(HL),B		; Restore old contents
-	JP	Z,MLOOP		; If RAM - test next byte
+;MSIZE:	LD	HL,STLOOK	; Point to start of RAM
+;MLOOP:	INC	HL		; Next byte
+;	LD	A,H		; Above address FFFF ?
+;	OR	L
+;	JP	Z,SETTOP	; Yes - 64K RAM
+;	LD	A,(HL)		; Get contents
+;	LD	B,A		; Save it
+;	CPL			; Flip all bits
+;	LD	(HL),A		; Put it back
+;	CP	(HL)		; RAM there if same
+;	LD	(HL),B		; Restore old contents
+;	JP	Z,MLOOP		; If RAM - test next byte
 ;
-SETTOP: DEC	HL		; Back one byte
+;SETTOP: DEC	HL		; Back one byte
+	ld	hl,STACKU
 	LD	DE,STLOOK-1	; See if enough RAM
 	CALL	CPDEHL		; Compare DE with HL
 	JP	C,NEMEM		; If not enough RAM
@@ -4373,7 +4379,11 @@ BINERR: LD	E,BN		; ?BIN Error
 ;
 ;MONOUT: JP	TXA		; output a char
 ;
-MONITR: JP	UNI_CST		; Restart unimon
+MONITR: 
+;JP	UNI_CST		; Restart unimon
+	ld	c, 1
+	rst	30h
+	ret
 ;
 INITST: LD	A,0		; Clear break flag
 	LD	(BRKFLG),A
