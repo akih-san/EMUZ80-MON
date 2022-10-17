@@ -60,7 +60,7 @@ STACKM	equ	8F00H	; monitor stack
 STACK	equ	8EC0H	; user stack
 ROM_B	equ	0000H	;EMUZ80_Q43 ROM base address
 RAM_B	equ	8000H	;EMUZ80_Q43 RAM base address
-RAM_E	equ	8FFFH	;EMUZ80_Q43 RAM END address
+RAM_E	equ	9FFFH	;EMUZ80_Q43 RAM END address
 IO_B	equ	0E000H	;EMUZ80_Q43 I/O base address
 	ENDIF
 
@@ -1571,29 +1571,23 @@ DD_2NDTBL_E:
 
 DUMP:
 	INC	HL
-	LD	A,(HL)
-	cp	'I'
-	JP	Z,disassemble
 	CALL	SKIPSP
 	CALL	RDHEX		; 1st arg.
-	jr	c, DP0
-	;; 1st arg. found
-	LD	(DSADDR),DE
-	jr	dp00
-
-DP0:	;; No arg. chk
-
-	push	hl
+	jr	nc, DP0
+	;; No arg. chk
+	CALL	SKIPSP
+	LD	A,(HL)
+	OR	A
+	JP	NZ,disassemble
 	LD	HL,(DSADDR)
 	LD	BC,128
 	ADD	HL,BC
 	LD	(DEADDR),HL
-	pop	hl
-	LD	A,(HL)
-	OR	A
-	JR	z, DPM		; no arg.
+	JR	DPM
 
-dp00:
+	;; 1st arg. found
+DP0:
+	LD	(DSADDR),DE
 	CALL	SKIPSP
 	LD	A,(HL)
 	CP	','
@@ -1729,6 +1723,9 @@ DPB2:
 ; DI[<address>][,s<steps>|<end address>]
 
 disassemble:
+	cp	'I'
+	jp	nz, ERR
+	
 	INC	HL
 	CALL	SKIPSP
 	CALL	RDHEX		; 1st arg.
@@ -1742,17 +1739,15 @@ di_nxt:
 	jr	NZ, chk_DI1	; ',' check
 
 ; No arg
-	ld	h, 0
-	ld	l, 10
-	ld	a, l
+	ld	a, 10
 	ld	(dasm_stpf), a	; set step flag
-	ld	(dasm_ed), hl	; set 10 steps
+	ld	(dasm_ed), a	; set 10 steps
 	jr	DISASM_go
 
 ; 1st arg
 get_DI1:
 	ld	(dasm_adr), de	; save start address
-;	INC	HL
+	INC	HL
 	jr	di_nxt
 
 chk_DI1:
@@ -2680,7 +2675,7 @@ mk_slar:
 ; make SRA r, SRA (HL)
 mk_srar:
 	call	ins_rstg
-	ld	de, SRAstr
+	ld	de, SETstr
 	jp	mkopcstr
 
 ; make SRL r, SRL (HL)
@@ -4763,13 +4758,11 @@ ESC_CRT_CLR:
 GETLIN:
 	LD	HL,INBUF
 
-GL00:
-	push	hl
-	PUSH	BC
-	LD	B,0
-
 GL0:	; input hl
 
+	PUSH	BC
+	push	hl
+	LD	B,0
 	CALL	CONIN
 	CP	CR
 	JR	Z,GLE
@@ -4790,9 +4783,9 @@ GL0:	; input hl
 	INC	B
 	LD	A,C
 	CALL	CONOUT
-	cp	'a'
+	cp	"a"
 	jr	c, GL1
-	cp	'z'+1
+	cp	"z"+1
 	jr	nc, GL1
 	and	0DFH	; make upper code
 GL1:
@@ -4815,8 +4808,8 @@ GLB:
 GLE:
 	CALL	CRLF
 	LD	(HL),00H
-	POP	BC
 	pop	hl
+	POP	BC
 	RET
 
 SKIPSP:
@@ -4917,7 +4910,7 @@ APITBL:
 	DW	HEXOUT2		; 08: CONOUT HEX2bytes: input A
 	DW	HEXOUT1		; 09: CONOUT HEX1byte : input A
 	DW	CLR_CRT		; 10: Clear screen (ESC+[2)
-	DW	GL00		; 11: GET a line (input HL : input buffer address)
+	DW	GL0		; 11: GET a line (input HL : input buffer address)
 	DW	SKIPSP		; 12: SKIP Spase
 	DW	CRLF		; 13: CONOUT CRLF
 	DW	UPPER		; 14: Lower to UPPER
