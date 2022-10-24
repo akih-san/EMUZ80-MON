@@ -1,4 +1,13 @@
 # EMUZ80-MON
+
+2022.10.24 Rev.B02.1をリリースしました。
+Rev.2.0でGRANT's Basicのキー入力センス機能に不具合が発生してしまいました。
+不具合を修正したバージョンRev.B02.1をリリースします。
+
+2022.10.15
+Rev.B02 リリース
+・逆アセンブルコマンド追加
+
 unimonの機能拡張を行いました。
 合わせて、GRANT's BASIC版のZ80 BASIC Ver 4.7bも搭載してあります。
 
@@ -51,8 +60,4 @@ BASICからは、MONITORコマンドでMonitorに戻ります。
 　　TP[ON|OFF] :Trace Print Mode
 　　TM[I|S] :Trace Option for CALL
 　　DI[<adr>][,s<steps>|<adr>] :Disassemble"
-
-2022.10.15
-Rev.B02 リリース
-・逆アセンブルコマンド追加
 
