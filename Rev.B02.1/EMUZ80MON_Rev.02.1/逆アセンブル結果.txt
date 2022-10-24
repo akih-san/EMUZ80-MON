@@ -1,0 +1,699 @@
+
+] dicc82,d209
+CC82  00           NOP
+CC83  01 84 05     LD      BC, 0584H
+CC86  02           LD      (BC), A
+CC87  03           INC     BC
+CC88  04           INC     B
+CC89  05           DEC     B
+CC8A  06 20        LD      B, 20H
+CC8C  07           RLCA
+CC8D  08           EX      AF, AF'
+CC8E  09           ADD     HL, BC
+CC8F  0A           LD      A, (BC)
+CC90  0B           DEC     BC
+CC91  0C           INC     C
+CC92  0D           DEC     C
+CC93  0E 20        LD      C, 20H
+CC95  0F           RRCA
+CC96  10 FE        DJNZ    0CC96H
+CC98  11 84 05     LD      DE, 0584H
+CC9B  12           LD      (DE), A
+CC9C  13           INC     DE
+CC9D  14           INC     D
+CC9E  15           DEC     D
+CC9F  16 20        LD      D, 20H
+CCA1  17           RLA
+CCA2  18 FD        JR      0CCA1H
+CCA4  19           ADD     HL, DE
+CCA5  1A           LD      A, (DE)
+CCA6  1B           DEC     DE
+CCA7  1C           INC     E
+CCA8  1D           DEC     E
+CCA9  1E 20        LD      E, 20H
+CCAB  1F           RRA
+CCAC  20 FB        JR      NZ, 0CCA9H
+CCAE  21 84 05     LD      HL, 0584H
+CCB1  22 84 05     LD      (0584H), HL
+CCB4  23           INC     HL
+CCB5  24           INC     H
+CCB6  25           DEC     H
+CCB7  26 20        LD      H, 20H
+CCB9  27           DAA
+CCBA  28 FA        JR      Z, 0CCB6H
+CCBC  29           ADD     HL, HL
+CCBD  2A 84 05     LD      HL, (0584H)
+CCC0  2B           DEC     HL
+CCC1  2C           INC     L
+CCC2  2D           DEC     L
+CCC3  2E 20        LD      L, 20H
+CCC5  2F           CPL
+CCC6  30 F9        JR      NC, 0CCC1H
+CCC8  31 84 05     LD      SP, 0584H
+CCCB  32 84 05     LD      (0584H), A
+CCCE  33           INC     SP
+CCCF  34           INC     (HL)
+CCD0  35           DEC     (HL)
+CCD1  36 20        LD      (HL), 20H
+CCD3  37           SCF
+CCD4  38 F8        JR      C, 0CCCEH
+CCD6  39           ADD     HL, SP
+CCD7  3A 84 05     LD      A, (0584H)
+CCDA  3B           DEC     SP
+CCDB  3C           INC     A
+CCDC  3D           DEC     A
+CCDD  3E 20        LD      A, 20H
+CCDF  3F           CCF
+CCE0  40           LD      B, B
+CCE1  41           LD      B, C
+CCE2  42           LD      B, D
+CCE3  43           LD      B, E
+CCE4  44           LD      B, H
+CCE5  45           LD      B, L
+CCE6  46           LD      B, (HL)
+CCE7  47           LD      B, A
+CCE8  48           LD      C, B
+CCE9  49           LD      C, C
+CCEA  4A           LD      C, D
+CCEB  4B           LD      C, E
+CCEC  4C           LD      C, H
+CCED  4D           LD      C, L
+CCEE  4E           LD      C, (HL)
+CCEF  4F           LD      C, A
+CCF0  50           LD      D, B
+CCF1  51           LD      D, C
+CCF2  52           LD      D, D
+CCF3  53           LD      D, E
+CCF4  54           LD      D, H
+CCF5  55           LD      D, L
+CCF6  56           LD      D, (HL)
+CCF7  57           LD      D, A
+CCF8  58           LD      E, B
+CCF9  59           LD      E, C
+CCFA  5A           LD      E, D
+CCFB  5B           LD      E, E
+CCFC  5C           LD      E, H
+CCFD  5D           LD      E, L
+CCFE  5E           LD      E, (HL)
+CCFF  5F           LD      E, A
+CD00  60           LD      H, B
+CD01  61           LD      H, C
+CD02  62           LD      H, D
+CD03  63           LD      H, E
+CD04  64           LD      H, H
+CD05  65           LD      H, L
+CD06  66           LD      H, (HL)
+CD07  67           LD      H, A
+CD08  68           LD      L, B
+CD09  69           LD      L, C
+CD0A  6A           LD      L, D
+CD0B  6B           LD      L, E
+CD0C  6C           LD      L, H
+CD0D  6D           LD      L, L
+CD0E  6E           LD      L, (HL)
+CD0F  6F           LD      L, A
+CD10  70           LD      (HL), B
+CD11  71           LD      (HL), C
+CD12  72           LD      (HL), D
+CD13  73           LD      (HL), E
+CD14  74           LD      (HL), H
+CD15  75           LD      (HL), L
+CD16  76           HALT
+CD17  77           LD      (HL), A
+CD18  78           LD      A, B
+CD19  79           LD      A, C
+CD1A  7A           LD      A, D
+CD1B  7B           LD      A, E
+CD1C  7C           LD      A, H
+CD1D  7D           LD      A, L
+CD1E  7E           LD      A, (HL)
+CD1F  7F           LD      A, A
+CD20  80           ADD     A, B
+CD21  81           ADD     A, C
+CD22  82           ADD     A, D
+CD23  83           ADD     A, E
+CD24  84           ADD     A, H
+CD25  85           ADD     A, L
+CD26  86           ADD     A, (HL)
+CD27  87           ADD     A, A
+CD28  88           ADC     A, B
+CD29  89           ADC     A, C
+CD2A  8A           ADC     A, D
+CD2B  8B           ADC     A, E
+CD2C  8C           ADC     A, H
+CD2D  8D           ADC     A, L
+CD2E  8E           ADC     A, (HL)
+CD2F  8F           ADC     A, A
+CD30  90           SUB     B
+CD31  91           SUB     C
+CD32  92           SUB     D
+CD33  93           SUB     E
+CD34  94           SUB     H
+CD35  95           SUB     L
+CD36  96           SUB     (HL)
+CD37  97           SUB     A
+CD38  98           SBC     A, B
+CD39  99           SBC     A, C
+CD3A  9A           SBC     A, D
+CD3B  9B           SBC     A, E
+CD3C  9C           SBC     A, H
+CD3D  9D           SBC     A, L
+CD3E  9E           SBC     A, (HL)
+CD3F  9F           SBC     A, A
+CD40  A0           AND     B
+CD41  A1           AND     C
+CD42  A2           AND     D
+CD43  A3           AND     E
+CD44  A4           AND     H
+CD45  A5           AND     L
+CD46  A6           AND     (HL)
+CD47  A7           AND     A
+CD48  A8           XOR     B
+CD49  A9           XOR     C
+CD4A  AA           XOR     D
+CD4B  AB           XOR     E
+CD4C  AC           XOR     H
+CD4D  AD           XOR     L
+CD4E  AE           XOR     (HL)
+CD4F  AF           XOR     A
+CD50  B0           OR      B
+CD51  B1           OR      C
+CD52  B2           OR      D
+CD53  B3           OR      E
+CD54  B4           OR      H
+CD55  B5           OR      L
+CD56  B6           OR      (HL)
+CD57  B7           OR      A
+CD58  B8           CP      B
+CD59  B9           CP      C
+CD5A  BA           CP      D
+CD5B  BB           CP      E
+CD5C  BC           CP      H
+CD5D  BD           CP      L
+CD5E  BE           CP      (HL)
+CD5F  BF           CP      A
+CD60  C0           RET     NZ
+CD61  C1           POP     BC
+CD62  C2 84 05     JP      NZ, 0584H
+CD65  C3 84 05     JP      0584H
+CD68  C4 84 05     CALL    NZ, 0584H
+CD6B  C5           PUSH    BC
+CD6C  C6 20        ADD     A, 20H
+CD6E  C7           RST     00H
+CD6F  C8           RET     Z
+CD70  C9           RET
+CD71  CA 84 05     JP      Z, 0584H
+CD74  CC 84 05     CALL    Z, 0584H
+CD77  CD 84 05     CALL    0584H
+CD7A  CE 20        ADC     A, 20H
+CD7C  CF           RST     08H
+CD7D  D0           RET     NC
+CD7E  D1           POP     DE
+CD7F  D2 84 05     JP      NC, 0584H
+CD82  D3 20        OUT     (20H), A
+CD84  D4 84 05     CALL    NC, 0584H
+CD87  D5           PUSH    DE
+CD88  D6 20        SUB     20H
+CD8A  D7           RST     10H
+CD8B  D8           RET     C
+CD8C  D9           EXX
+CD8D  DA 84 05     JP      C, 0584H
+CD90  DB 20        IN      A, (20H)
+CD92  DC 84 05     CALL    C, 0584H
+CD95  DE 20        SBC     A, 20H
+CD97  DF           RST     18H
+CD98  E0           RET     PO
+CD99  E1           POP     HL
+CD9A  E2 84 05     JP      PO, 0584H
+CD9D  E3           EX      (SP), HL
+CD9E  E4 84 05     CALL    PO, 0584H
+CDA1  E5           PUSH    HL
+CDA2  E6 20        AND     20H
+CDA4  E7           RST     20H
+CDA5  E8           RET     PE
+CDA6  E9           JP      (HL)
+CDA7  EA 84 05     JP      PE, 0584H
+CDAA  EB           EX      DE, HL
+CDAB  EC 84 05     CALL    PE, 0584H
+CDAE  EE 20        XOR     20H
+CDB0  EF           RST     28H
+CDB1  F0           RET     P
+CDB2  F1           POP     AF
+CDB3  F2 84 05     JP      P, 0584H
+CDB6  F3           DI
+CDB7  F4 84 05     CALL    P, 0584H
+CDBA  F5           PUSH    AF
+CDBB  F6 20        OR      20H
+CDBD  F7           RST     30H
+CDBE  F8           RET     M
+CDBF  F9           LD      SP, HL
+CDC0  FA 84 05     JP      M, 0584H
+CDC3  FB           EI
+CDC4  FC 84 05     CALL    M, 0584H
+CDC7  FE 20        CP      20H
+CDC9  FF           RST     38H
+CDCA  CB 00        RLC     B
+CDCC  CB 01        RLC     C
+CDCE  CB 02        RLC     D
+CDD0  CB 03        RLC     E
+CDD2  CB 04        RLC     H
+CDD4  CB 05        RLC     L
+CDD6  CB 06        RLC     (HL)
+CDD8  CB 07        RLC     A
+CDDA  CB 08        RRC     B
+CDDC  CB 09        RRC     C
+CDDE  CB 0A        RRC     D
+CDE0  CB 0B        RRC     E
+CDE2  CB 0C        RRC     H
+CDE4  CB 0D        RRC     L
+CDE6  CB 0E        RRC     (HL)
+CDE8  CB 0F        RRC     A
+CDEA  CB 10        RL      B
+CDEC  CB 11        RL      C
+CDEE  CB 12        RL      D
+CDF0  CB 13        RL      E
+CDF2  CB 14        RL      H
+CDF4  CB 15        RL      L
+CDF6  CB 16        RL      (HL)
+CDF8  CB 17        RL      A
+CDFA  CB 18        RR      B
+CDFC  CB 19        RR      C
+CDFE  CB 1A        RR      D
+CE00  CB 1B        RR      E
+CE02  CB 1C        RR      H
+CE04  CB 1D        RR      L
+CE06  CB 1E        RR      (HL)
+CE08  CB 1F        RR      A
+CE0A  CB 20        SLA     B
+CE0C  CB 21        SLA     C
+CE0E  CB 22        SLA     D
+CE10  CB 23        SLA     E
+CE12  CB 24        SLA     H
+CE14  CB 25        SLA     L
+CE16  CB 26        SLA     (HL)
+CE18  CB 27        SLA     A
+CE1A  CB 28        SRA     B
+CE1C  CB 29        SRA     C
+CE1E  CB 2A        SRA     D
+CE20  CB 2B        SRA     E
+CE22  CB 2C        SRA     H
+CE24  CB 2D        SRA     L
+CE26  CB 2E        SRA     (HL)
+CE28  CB 2F        SRA     A
+CE2A  CB 38        SRL     B
+CE2C  CB 39        SRL     C
+CE2E  CB 3A        SRL     D
+CE30  CB 3B        SRL     E
+CE32  CB 3C        SRL     H
+CE34  CB 3D        SRL     L
+CE36  CB 3E        SRL     (HL)
+CE38  CB 3F        SRL     A
+CE3A  CB 40        BIT     0, B
+CE3C  CB 41        BIT     0, C
+CE3E  CB 42        BIT     0, D
+CE40  CB 43        BIT     0, E
+CE42  CB 44        BIT     0, H
+CE44  CB 45        BIT     0, L
+CE46  CB 46        BIT     0, (HL)
+CE48  CB 47        BIT     0, A
+CE4A  CB 48        BIT     1, B
+CE4C  CB 49        BIT     1, C
+CE4E  CB 4A        BIT     1, D
+CE50  CB 4B        BIT     1, E
+CE52  CB 4C        BIT     1, H
+CE54  CB 4D        BIT     1, L
+CE56  CB 4E        BIT     1, (HL)
+CE58  CB 4F        BIT     1, A
+CE5A  CB 50        BIT     2, B
+CE5C  CB 51        BIT     2, C
+CE5E  CB 52        BIT     2, D
+CE60  CB 53        BIT     2, E
+CE62  CB 54        BIT     2, H
+CE64  CB 55        BIT     2, L
+CE66  CB 56        BIT     2, (HL)
+CE68  CB 57        BIT     2, A
+CE6A  CB 58        BIT     3, B
+CE6C  CB 59        BIT     3, C
+CE6E  CB 5A        BIT     3, D
+CE70  CB 5B        BIT     3, E
+CE72  CB 5C        BIT     3, H
+CE74  CB 5D        BIT     3, L
+CE76  CB 5E        BIT     3, (HL)
+CE78  CB 5F        BIT     3, A
+CE7A  CB 60        BIT     4, B
+CE7C  CB 61        BIT     4, C
+CE7E  CB 62        BIT     4, D
+CE80  CB 63        BIT     4, E
+CE82  CB 64        BIT     4, H
+CE84  CB 65        BIT     4, L
+CE86  CB 66        BIT     4, (HL)
+CE88  CB 67        BIT     4, A
+CE8A  CB 68        BIT     5, B
+CE8C  CB 69        BIT     5, C
+CE8E  CB 6A        BIT     5, D
+CE90  CB 6B        BIT     5, E
+CE92  CB 6C        BIT     5, H
+CE94  CB 6D        BIT     5, L
+CE96  CB 6E        BIT     5, (HL)
+CE98  CB 6F        BIT     5, A
+CE9A  CB 70        BIT     6, B
+CE9C  CB 71        BIT     6, C
+CE9E  CB 72        BIT     6, D
+CEA0  CB 73        BIT     6, E
+CEA2  CB 74        BIT     6, H
+CEA4  CB 75        BIT     6, L
+CEA6  CB 76        BIT     6, (HL)
+CEA8  CB 77        BIT     6, A
+CEAA  CB 78        BIT     7, B
+CEAC  CB 79        BIT     7, C
+CEAE  CB 7A        BIT     7, D
+CEB0  CB 7B        BIT     7, E
+CEB2  CB 7C        BIT     7, H
+CEB4  CB 7D        BIT     7, L
+CEB6  CB 7E        BIT     7, (HL)
+CEB8  CB 7F        BIT     7, A
+CEBA  CB 80        RES     0, B
+CEBC  CB 81        RES     0, C
+CEBE  CB 82        RES     0, D
+CEC0  CB 83        RES     0, E
+CEC2  CB 84        RES     0, H
+CEC4  CB 85        RES     0, L
+CEC6  CB 86        RES     0, (HL)
+CEC8  CB 87        RES     0, A
+CECA  CB 88        RES     1, B
+CECC  CB 89        RES     1, C
+CECE  CB 8A        RES     1, D
+CED0  CB 8B        RES     1, E
+CED2  CB 8C        RES     1, H
+CED4  CB 8D        RES     1, L
+CED6  CB 8E        RES     1, (HL)
+CED8  CB 8F        RES     1, A
+CEDA  CB 90        RES     2, B
+CEDC  CB 91        RES     2, C
+CEDE  CB 92        RES     2, D
+CEE0  CB 93        RES     2, E
+CEE2  CB 94        RES     2, H
+CEE4  CB 95        RES     2, L
+CEE6  CB 96        RES     2, (HL)
+CEE8  CB 97        RES     2, A
+CEEA  CB 98        RES     3, B
+CEEC  CB 99        RES     3, C
+CEEE  CB 9A        RES     3, D
+CEF0  CB 9B        RES     3, E
+CEF2  CB 9C        RES     3, H
+CEF4  CB 9D        RES     3, L
+CEF6  CB 9E        RES     3, (HL)
+CEF8  CB 9F        RES     3, A
+CEFA  CB A0        RES     4, B
+CEFC  CB A1        RES     4, C
+CEFE  CB A2        RES     4, D
+CF00  CB A3        RES     4, E
+CF02  CB A4        RES     4, H
+CF04  CB A5        RES     4, L
+CF06  CB A6        RES     4, (HL)
+CF08  CB A7        RES     4, A
+CF0A  CB A8        RES     5, B
+CF0C  CB A9        RES     5, C
+CF0E  CB AA        RES     5, D
+CF10  CB AB        RES     5, E
+CF12  CB AC        RES     5, H
+CF14  CB AD        RES     5, L
+CF16  CB AE        RES     5, (HL)
+CF18  CB AF        RES     5, A
+CF1A  CB B0        RES     6, B
+CF1C  CB B1        RES     6, C
+CF1E  CB B2        RES     6, D
+CF20  CB B3        RES     6, E
+CF22  CB B4        RES     6, H
+CF24  CB B5        RES     6, L
+CF26  CB B6        RES     6, (HL)
+CF28  CB B7        RES     6, A
+CF2A  CB B8        RES     7, B
+CF2C  CB B9        RES     7, C
+CF2E  CB BA        RES     7, D
+CF30  CB BB        RES     7, E
+CF32  CB BC        RES     7, H
+CF34  CB BD        RES     7, L
+CF36  CB BE        RES     7, (HL)
+CF38  CB BF        RES     7, A
+CF3A  CB C0        SET     0, B
+CF3C  CB C1        SET     0, C
+CF3E  CB C2        SET     0, D
+CF40  CB C3        SET     0, E
+CF42  CB C4        SET     0, H
+CF44  CB C5        SET     0, L
+CF46  CB C6        SET     0, (HL)
+CF48  CB C7        SET     0, A
+CF4A  CB C8        SET     1, B
+CF4C  CB C9        SET     1, C
+CF4E  CB CA        SET     1, D
+CF50  CB CB        SET     1, E
+CF52  CB CC        SET     1, H
+CF54  CB CD        SET     1, L
+CF56  CB CE        SET     1, (HL)
+CF58  CB CF        SET     1, A
+CF5A  CB D0        SET     2, B
+CF5C  CB D1        SET     2, C
+CF5E  CB D2        SET     2, D
+CF60  CB D3        SET     2, E
+CF62  CB D4        SET     2, H
+CF64  CB D5        SET     2, L
+CF66  CB D6        SET     2, (HL)
+CF68  CB D7        SET     2, A
+CF6A  CB D8        SET     3, B
+CF6C  CB D9        SET     3, C
+CF6E  CB DA        SET     3, D
+CF70  CB DB        SET     3, E
+CF72  CB DC        SET     3, H
+CF74  CB DD        SET     3, L
+CF76  CB DE        SET     3, (HL)
+CF78  CB DF        SET     3, A
+CF7A  CB E0        SET     4, B
+CF7C  CB E1        SET     4, C
+CF7E  CB E2        SET     4, D
+CF80  CB E3        SET     4, E
+CF82  CB E4        SET     4, H
+CF84  CB E5        SET     4, L
+CF86  CB E6        SET     4, (HL)
+CF88  CB E7        SET     4, A
+CF8A  CB E8        SET     5, B
+CF8C  CB E9        SET     5, C
+CF8E  CB EA        SET     5, D
+CF90  CB EB        SET     5, E
+CF92  CB EC        SET     5, H
+CF94  CB ED        SET     5, L
+CF96  CB EE        SET     5, (HL)
+CF98  CB EF        SET     5, A
+CF9A  CB F0        SET     6, B
+CF9C  CB F1        SET     6, C
+CF9E  CB F2        SET     6, D
+CFA0  CB F3        SET     6, E
+CFA2  CB F4        SET     6, H
+CFA4  CB F5        SET     6, L
+CFA6  CB F6        SET     6, (HL)
+CFA8  CB F7        SET     6, A
+CFAA  CB F8        SET     7, B
+CFAC  CB F9        SET     7, C
+CFAE  CB FA        SET     7, D
+CFB0  CB FB        SET     7, E
+CFB2  CB FC        SET     7, H
+CFB4  CB FD        SET     7, L
+CFB6  CB FE        SET     7, (HL)
+CFB8  CB FF        SET     7, A
+CFBA  DD 09        ADD     IX, BC
+CFBC  DD 19        ADD     IX, DE
+CFBE  DD 21 84 05  LD      IX, 0584H
+CFC2  DD 22 84 05  LD      (0584H), IX
+CFC6  DD 23        INC     IX
+CFC8  DD 29        ADD     IX, IX
+CFCA  DD 2A 84 05  LD      IX, (0584H)
+CFCE  DD 2B        DEC     IX
+CFD0  DD 34 00     INC     (IX+00H)
+CFD3  DD 35 01     DEC     (IX+01H)
+CFD6  DD 36 02 20  LD      (IX+02H), 20H
+CFDA  DD 39        ADD     IX, SP
+CFDC  DD 46 7F     LD      B, (IX+7FH)
+CFDF  DD 4E 80     LD      C, (IX-80H)
+CFE2  DD 56 82     LD      D, (IX-7EH)
+CFE5  DD 5E 9C     LD      E, (IX-64H)
+CFE8  DD 66 EC     LD      H, (IX-14H)
+CFEB  DD 6E FF     LD      L, (IX-01H)
+CFEE  DD 70 05     LD      (IX+05H), B
+CFF1  DD 71 05     LD      (IX+05H), C
+CFF4  DD 72 05     LD      (IX+05H), D
+CFF7  DD 73 05     LD      (IX+05H), E
+CFFA  DD 74 05     LD      (IX+05H), H
+CFFD  DD 75 05     LD      (IX+05H), L
+D000  DD 77 05     LD      (IX+05H), A
+D003  DD 7E 05     LD      A, (IX+05H)
+D006  DD 86 05     ADD     A, (IX+05H)
+D009  DD 8E 05     ADC     A, (IX+05H)
+D00C  DD 96 05     SUB     (IX+05H)
+D00F  DD 9E 05     SBC     A, (IX+05H)
+D012  DD A6 05     AND     (IX+05H)
+D015  DD AE 05     XOR     (IX+05H)
+D018  DD B6 05     OR      (IX+05H)
+D01B  DD BE 05     CP      (IX+05H)
+D01E  DD E1        POP     IX
+D020  DD E3        EX      (SP), IX
+D022  DD E5        PUSH    IX
+D024  DD E9        JP      (IX)
+D026  DD F9        LD      SP, IX
+D028  DD CB 05 06  RLC     (IX+05H)
+D02C  DD CB 05 0E  RRC     (IX+05H)
+D030  DD CB 05 16  RL      (IX+05H)
+D034  DD CB 05 1E  RR      (IX+05H)
+D038  DD CB 05 26  SLA     (IX+05H)
+D03C  DD CB 05 2E  SRA     (IX+05H)
+D040  DD CB 05 3E  SRL     (IX+05H)
+D044  DD CB 05 46  BIT     0, (IX+05H)
+D048  DD CB 05 4E  BIT     1, (IX+05H)
+D04C  DD CB 05 56  BIT     2, (IX+05H)
+D050  DD CB 05 5E  BIT     3, (IX+05H)
+D054  DD CB 05 66  BIT     4, (IX+05H)
+D058  DD CB 05 6E  BIT     5, (IX+05H)
+D05C  DD CB 05 76  BIT     6, (IX+05H)
+D060  DD CB 05 7E  BIT     7, (IX+05H)
+D064  DD CB 05 86  RES     0, (IX+05H)
+D068  DD CB 05 8E  RES     1, (IX+05H)
+D06C  DD CB 05 96  RES     2, (IX+05H)
+D070  DD CB 05 9E  RES     3, (IX+05H)
+D074  DD CB 05 A6  RES     4, (IX+05H)
+D078  DD CB 05 AE  RES     5, (IX+05H)
+D07C  DD CB 05 B6  RES     6, (IX+05H)
+D080  DD CB 05 BE  RES     7, (IX+05H)
+D084  DD CB 05 C6  SET     0, (IX+05H)
+D088  DD CB 05 CE  SET     1, (IX+05H)
+D08C  DD CB 05 D6  SET     2, (IX+05H)
+D090  DD CB 05 DE  SET     3, (IX+05H)
+D094  DD CB 05 E6  SET     4, (IX+05H)
+D098  DD CB 05 EE  SET     5, (IX+05H)
+D09C  DD CB 05 F6  SET     6, (IX+05H)
+D0A0  DD CB 05 FE  SET     7, (IX+05H)
+D0A4  ED 40        IN      B, (C)
+D0A6  ED 41        OUT     (C), B
+D0A8  ED 42        SBC     HL, BC
+D0AA  ED 43 84 05  LD      (0584H), BC
+D0AE  ED 44        NEG
+D0B0  ED 45        RETN
+D0B2  ED 46        IM      0
+D0B4  ED 47        LD      I, A
+D0B6  ED 48        IN      C, (C)
+D0B8  ED 49        OUT     (C), C
+D0BA  ED 4A        ADC     HL, BC
+D0BC  ED 4B 84 05  LD      BC, (0584H)
+D0C0  ED 4D        RETI
+D0C2  ED 4F        LD      R, A
+D0C4  ED 50        IN      D, (C)
+D0C6  ED 51        OUT     (C), D
+D0C8  ED 52        SBC     HL, DE
+D0CA  ED 53 84 05  LD      (0584H), DE
+D0CE  ED 56        IM      1
+D0D0  ED 57        LD      A, I
+D0D2  ED 58        IN      E, (C)
+D0D4  ED 59        OUT     (C), E
+D0D6  ED 5A        ADC     HL, DE
+D0D8  ED 5B 84 05  LD      DE, (0584H)
+D0DC  ED 5E        IM      2
+D0DE  ED 5F        LD      A, R
+D0E0  ED 60        IN      H, (C)
+D0E2  ED 61        OUT     (C), H
+D0E4  ED 62        SBC     HL, HL
+D0E6  ED 67        RRD
+D0E8  ED 68        IN      L, (C)
+D0EA  ED 69        OUT     (C), L
+D0EC  ED 6A        ADC     HL, HL
+D0EE  ED 6F        RLD
+D0F0  ED 72        SBC     HL, SP
+D0F2  ED 73 84 05  LD      (0584H), SP
+D0F6  ED 78        IN      A, (C)
+D0F8  ED 79        OUT     (C), A
+D0FA  ED 7A        ADC     HL, SP
+D0FC  ED 7B 84 05  LD      SP, (0584H)
+D100  ED A0        LDI
+D102  ED A1        CPI
+D104  ED A2        INI
+D106  ED A3        OUTI
+D108  ED A8        LDD
+D10A  ED A9        CPD
+D10C  ED AA        IND
+D10E  ED AB        OUTD
+D110  ED B0        LDIR
+D112  ED B1        CPIR
+D114  ED B2        INIR
+D116  ED B3        OTIR
+D118  ED B8        LDDR
+D11A  ED B9        CPDR
+D11C  ED BA        INDR
+D11E  ED BB        OTDR
+D120  FD 09        ADD     IY, BC
+D122  FD 19        ADD     IY, DE
+D124  FD 21 84 05  LD      IY, 0584H
+D128  FD 22 84 05  LD      (0584H), IY
+D12C  FD 23        INC     IY
+D12E  FD 29        ADD     IY, IY
+D130  FD 2A 84 05  LD      IY, (0584H)
+D134  FD 2B        DEC     IY
+D136  FD 34 05     INC     (IY+05H)
+D139  FD 35 05     DEC     (IY+05H)
+D13C  FD 36 05 20  LD      (IY+05H), 20H
+D140  FD 39        ADD     IY, SP
+D142  FD 46 05     LD      B, (IY+05H)
+D145  FD 4E 05     LD      C, (IY+05H)
+D148  FD 56 05     LD      D, (IY+05H)
+D14B  FD 5E 05     LD      E, (IY+05H)
+D14E  FD 66 05     LD      H, (IY+05H)
+D151  FD 6E 05     LD      L, (IY+05H)
+D154  FD 70 05     LD      (IY+05H), B
+D157  FD 71 05     LD      (IY+05H), C
+D15A  FD 72 05     LD      (IY+05H), D
+D15D  FD 73 05     LD      (IY+05H), E
+D160  FD 74 05     LD      (IY+05H), H
+D163  FD 75 05     LD      (IY+05H), L
+D166  FD 77 05     LD      (IY+05H), A
+D169  FD 7E 05     LD      A, (IY+05H)
+D16C  FD 86 05     ADD     A, (IY+05H)
+D16F  FD 8E 05     ADC     A, (IY+05H)
+D172  FD 96 05     SUB     (IY+05H)
+D175  FD 9E 05     SBC     A, (IY+05H)
+D178  FD A6 05     AND     (IY+05H)
+D17B  FD AE 05     XOR     (IY+05H)
+D17E  FD B6 05     OR      (IY+05H)
+D181  FD BE 05     CP      (IY+05H)
+D184  FD E1        POP     IY
+D186  FD E3        EX      (SP), IY
+D188  FD E5        PUSH    IY
+D18A  FD E9        JP      (IY)
+D18C  FD F9        LD      SP, IY
+D18E  FD CB 05 06  RLC     (IY+05H)
+D192  FD CB 05 0E  RRC     (IY+05H)
+D196  FD CB 05 16  RL      (IY+05H)
+D19A  FD CB 05 1E  RR      (IY+05H)
+D19E  FD CB 05 26  SLA     (IY+05H)
+D1A2  FD CB 05 2E  SRA     (IY+05H)
+D1A6  FD CB 05 3E  SRL     (IY+05H)
+D1AA  FD CB 05 46  BIT     0, (IY+05H)
+D1AE  FD CB 05 4E  BIT     1, (IY+05H)
+D1B2  FD CB 05 56  BIT     2, (IY+05H)
+D1B6  FD CB 05 5E  BIT     3, (IY+05H)
+D1BA  FD CB 05 66  BIT     4, (IY+05H)
+D1BE  FD CB 05 6E  BIT     5, (IY+05H)
+D1C2  FD CB 05 76  BIT     6, (IY+05H)
+D1C6  FD CB 05 7E  BIT     7, (IY+05H)
+D1CA  FD CB 05 86  RES     0, (IY+05H)
+D1CE  FD CB 05 8E  RES     1, (IY+05H)
+D1D2  FD CB 05 96  RES     2, (IY+05H)
+D1D6  FD CB 05 9E  RES     3, (IY+05H)
+D1DA  FD CB 05 A6  RES     4, (IY+05H)
+D1DE  FD CB 05 AE  RES     5, (IY+05H)
+D1E2  FD CB 05 B6  RES     6, (IY+05H)
+D1E6  FD CB 05 BE  RES     7, (IY+05H)
+D1EA  FD CB 05 C6  SET     0, (IY+05H)
+D1EE  FD CB 05 CE  SET     1, (IY+05H)
+D1F2  FD CB 05 D6  SET     2, (IY+05H)
+D1F6  FD CB 05 DE  SET     3, (IY+05H)
+D1FA  FD CB 05 E6  SET     4, (IY+05H)
+D1FE  FD CB 05 EE  SET     5, (IY+05H)
+D202  FD CB 05 F6  SET     6, (IY+05H)
+D206  FD CB 05 FE  SET     7, (IY+05H)
+]
