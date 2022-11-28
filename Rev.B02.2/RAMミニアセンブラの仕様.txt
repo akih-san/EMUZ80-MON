@@ -1,38 +1,44 @@
-�`�@RAM�~�j�A�Z���u���̎d�l�@�`
+～　RAMミニアセンブラの仕様　～
 
-�j���j�b�N�́AZ80�A�Z���u���̎d�l�ɏ]���B
+ニモニックは、Z80アセンブラの仕様に従う。
 
-�������̈�����
-�E������10�i���A16�i�����������̂Ƃ���B
-�EA�`F�Ŏn�܂鐔���ɂ́A�O��0��t����B
-�E16�i���͖����ɂg��t����B
-�E������16�r�b�g���ň�����B�O�`65535
-�E�����̏������͂͂V�����ȏ�̓G���[�ƂȂ�B�i�ő�0FFFFH��6�����j
-�E�L���r�b�g����8�r�b�g�̏ꍇ�A16�r�b�g���̉���8�r�b�g���L���ŏ��8�r�b�g�͖��������
+＜数字の扱い＞
+・数字は10進数、16進数を扱うものとする。
+・A～Fで始まる数字には、前に0を付ける。
+・16進数は末尾にＨを付ける。
+・数字は16ビット長で扱われる。０～65535
+・数字の助長入力は７文字以上はエラーとなる。（最大0FFFFHの6文字）
+・有効ビット長が8ビットの場合、16ビット長の下位8ビットが有効で上位8ビットは無視される
 
-���^�����߁�
-�R�����A�T�|�[�g���܂����B
+＜疑似命令＞
+３つだけ、サポートしました。
 
-�P�DORG <address>
+１．ORG <address>
 
-�w�肳�ꂽ�A�h���X�փ��P�[�V�����J�E���^��i�߂܂��B
+指定されたアドレスへロケーションカウンタを進めます。
 
-�Q�DDB [1�o�C�g���l | "������"]
+２．DB [1バイト数値 | "文字列"]
 
-1�o�C�g�̐��l���́A�܂��́A"������"����͂��܂��B
-DB�̓T�u�Z�b�g�ł��B�u,�v�ŋ�؂��Ă̕������͂̓T�|�[�g���Ă��܂���B
+1バイトの数値入力、または、"文字列"を入力します。
+DBはサブセットです。「,」で区切っての複数入力はサポートしていません。
 
-�R�DDW
+３．DW
 
-2�o�C�g�̐��l���́B
-DW�̓T�u�Z�b�g�ł��B�u,�v�ŋ�؂��Ă̕������͂̓T�|�[�g���Ă��܂���B
+2バイトの数値入力。
+DWはサブセットです。「,」で区切っての複数入力はサポートしていません。
 
-���v�Z����
-�T�|�[�g���Ă��܂���B
+＜計算式＞
+サポートしていません。
 
-��RAM�~�j�A�Z���u���̃R�}���h��
+＜リラティブ数値の入力について＞
+
+JR、DJNZで指定するリラティブ数値は、目的のアドレスを入力することで、自動的に計算されます。
+
+指定アドレスが範囲外の場合、エラーとなります。
+
+＜RAMミニアセンブラのコマンド＞
 ? ; command help
-A[<address>] ; Mini assemble mode�i�~�j�A�Z���u�����[�h�ɂȂ�܂��j
+A[<address>] ; Mini assemble mode（ミニアセンブルモードになります）
              ; [.]<cr> : exit assemble mode
 L[<address>][,<steps>] ; list disassemble
 S<address> ; set address for line assemble
