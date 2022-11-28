@@ -11,7 +11,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MON_Rev03 = 0
-RAM12K = 1
+RAM12K = 0
 RAM_MODE = 1
 
 CR	EQU	0DH
@@ -1358,7 +1358,7 @@ in_a_nn:
 	ld	hl, (opr_num35)
 	ld	a, h
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 	ld	a, l
 	push	af		; adjust I/F
 	ld	a, e		; 1st MC
@@ -1380,10 +1380,10 @@ el3_43: ; JR   ( normal )
 
 	ld	a, (opr2_cd)
 	cp	25		; number?
-	jp	nz, illnum_err
+	jp	nz, asm_err
 
 	call	calc_reladr
-	jp	c, illnum_err
+	jp	c, asm_err
 	
 	push	af		; adjust I/F
 	ld	a, d		; adjust I/F
@@ -1845,7 +1845,7 @@ ld_r251:
 	ld	hl, (opr_num25)
 	ld	a, h
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 	ld	a, l
 	push	af		; adjust I/F
 	ld	a, d		; adjust I/F
@@ -2010,7 +2010,7 @@ ld_xynln: ; 4byte MC
 	ld	hl, (opr_num25)
 	ld	a, h
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 
 ; adjust I/F
 ; d: 1st MC, a: 2nd MC, c: 3rd MC, e: 4th MC
@@ -2120,7 +2120,7 @@ el3_s281: ; LD (HL), nn
 	ld	hl, (opr_num25)
 	ld	a, h
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 
 	ld	a, l
 	push	af		; adjust I/F
@@ -2398,7 +2398,7 @@ el2_691:
 	ld	bc, (opr_num25)
 	ld	a, b
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 
 	ld	hl, (tasm_adr)
 	ld	(hl), c
@@ -2414,16 +2414,12 @@ el2_68: ; ORG
 	ld	hl, (opr_num25)
 	ld	bc, RAM_B
 	sbc	hl, bc
-	jr	c, ramerr
+	jp	c, asm_err
 
 	ld	bc, RAM_B + RAM_SIZ
 	ld	hl, (opr_num25)
 	sbc	hl, bc
 	jr	c, okram
-
-ramerr:
-	ld	hl, ramerr_msg
-	jp	asm_err1
 
 okram:
 	ld	hl, (opr_num25)
@@ -2431,14 +2427,11 @@ okram:
 	xor	a
 	jp	mc_end
 
-ramerr_msg:
-	db	"No RAM ", 0
-	
 ; CALL nnnn
 el2_45:
 	ld	a, (opr1_cd)
 	cp	25
-	jr	nz, illnum_err
+	jp	nz, asm_err
 
 	ld	a, 0CDH
 
@@ -2459,10 +2452,10 @@ mc_end3:
 el2_44:
 	ld	a, (opr1_cd)
 	cp	25
-	jr	nz, illnum_err
+	jp	nz, asm_err
 
 	call	calc_reladr
-	jr	c, ovr_err
+	jp	c, asm_err
 	push	af
 	ld	a, 10H
 el2_441:
@@ -2473,20 +2466,16 @@ el2_441:
 	ld	(hl), a
 	jp	mc_end2
 
-ovr_err:
-	ld	hl, ovr_msg
-	jp	asm_err1
-
-ovr_msg:
-	db	"Over. ", 0
+;ovr_msg:
+;	db	"Over. ", 0
 
 ; JR e
 el2_43:
 	ld	a, (opr1_cd)
 	cp	25
-	jr	nz, illnum_err
+	jp	nz, asm_err
 	call	calc_reladr
-	jr	c, ovr_err
+	jp	c, asm_err
 	push	af
 	ld	a, 18H
 	jr	el2_441
@@ -2496,24 +2485,20 @@ el2_49:
 	ld	hl, (opr_num25)
 	ld	a, h
 	or	a
-	jr	nz, illnum_err
+	jp	nz, asm_err
 	ld	a, l
 	ld	hl, rst_no
 	ld	bc, 8
 	cpir
-	jr	nz, illnum_err
+	jp	nz, asm_err
 
 	ld	hl, rst_cd
 	jp	st_mc1		; get and store MC code
 
-illnum_err:
-	ld	hl, ill_num
-	jp	asm_err1
-
 rst_no:	db	0, 8, 10H, 18H, 20H, 28H, 30H, 38H
 rst_cd:	db	0FFH, 0F7H, 0EFH, 0E7H, 0DFH, 0D7H, 0CFH, 0C7H
 
-ill_num:	db	"Ill-No. ", 0
+;ill_num:	db	"Ill-No. ", 0
 
 ; RET CC
 el2_46:
@@ -2521,19 +2506,13 @@ el2_46:
 	ld	hl, ret_no
 	ld	bc, 8
 	cpir
-	jr	nz, opr_err
+	jp	nz, asm_err
 
 	ld	hl, ret_cd
 	jp	st_mc1		; get and store MC code
 
-opr_err:
-	ld	hl, opr_errm
-	jp	asm_err1
-
 ret_no:	db	6, 18, 19, 20, 21, 22, 23, 24
 ret_cd:	db	0E8H, 0E0H, 0F0H, 0D0H, 0C0H, 0F8H, 0C8H, 0D8H
-
-opr_errm:	db	"Operand ", 0
 
 ; JP (HL), JP nnnn, JP (IX), JP (IY)
 el2_42:
@@ -2546,7 +2525,7 @@ el2_42:
 	cp	29		; (IX)?
 	jr	z, jpix
 	cp	30		; (IY)?
-	jr	nz, opr_err
+	jp	nz, asm_err
 
 ; JP (IY)
 	ld	a, l
@@ -2609,7 +2588,7 @@ and_cp:
 	ld	hl, r_hl_nn
 	ld	bc, rhlnnxy
 	cpir
-	jr	nz, opr_err
+	jp	nz, asm_err
 
 	ld	hl, base1
 	add	hl, bc
@@ -2631,7 +2610,7 @@ el2_410:
 	ld	hl, (opr_num25)
 	ld	a, h
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 
 	ld	a, l
 el2_411:
@@ -2702,7 +2681,7 @@ el2_di:
 	cpir
 	ld	h, d
 	ld	l, e
-	jp	nz, opr_err
+	jp	nz, asm_err
 
 	ld	a, c
 	ld	d, 0FDH		; set IY extended OP
@@ -2760,8 +2739,8 @@ el2_81:
 	ld	bc, pp_no
 	ld	a, (opr1_cd)	; get code number of operand No.1
 	cpir
-	jp	nz, opr_err
-	
+	jp	nz, asm_err
+
 	ld	hl, pp_base
 	add	hl, bc
 	ld	a, (hl)
@@ -2860,7 +2839,7 @@ nxt_sr:
 	ld	hl, ex_sr_
 	ld	bc, ex_sr_num
 	cpir
-	jp	nz, opr_err
+	jp	nz, asm_err
 
 	ld	d, 0FDh		; for IY
 	ld	a, c
@@ -2896,10 +2875,10 @@ mc_end4:
 el2_54:	; IM
 	ld	a, (opr_num25+1)	; get high byte
 	or	a
-	jp	nz, illnum_err
+	jp	nz, asm_err
 	ld	a, (opr_num25)		; get low byte
 	cp	3
-	jp	nc, illnum_err
+	jp	nc, asm_err
 
 	ld	c, 046h		; IM 0
 	or	a
@@ -3290,7 +3269,14 @@ cal_01:
 	ret
 
 cal_1:
-	cp	80H
+	ld	a, h
+	cp	0ffh
+	jr	nz, adr_ovr
+	ld	a, l
+	neg
+	cp	81h
+	ld	a, l
+	ccf
 	jr	cal_01
 
 adr_ovr:
