@@ -10,10 +10,12 @@ RAM12K版のファームウェアは、メモリマップを以下の様に変�
 ROM 0000H - BFFFH (48K)
 
 RAM C000H - EFFFH (12K)
+
 I/O F000H - FFFFH (4K)
 
 (UART)
 FF00H	; UART DATA REGISTOR
+
 FF01H	; UART CONTROL REGISTOR
 
 ＣＬＣを8個使い、メモリの読み書きのベクター割り込み処理はデータ転送の最小限の
@@ -23,6 +25,7 @@ BASICのASCIIARTは、2.5MHZのZ80で1240秒程度でした。
 
 
 PIC18F47Q84_firmwareのフォルダにRAM8KとRAM12K用のファームとヘキサファイル
+
 があります。オリジナルメモリマップを使用すのであれば、RAM8Kを使用してください。
 
 一応PIC18F47Q43はRev.B03ではサポートしません。ROM、RAMの容量が足らないためです。
@@ -30,26 +33,31 @@ PIC18F47Q84_firmwareのフォルダにRAM8KとRAM12K用のファームとヘキ�
 Rev.B03では、SBCZ80データパックに収録されている
 
 ・GRANT's BASIC
+
 ・PALO ALTO TINY BASIC
 
 および、
 
 ・GAME80インタプリタ
+
 ・GAME80コンパイラ
 
 を搭載しました。モニタプログラムの＃コマンドで、ローンチすることが出来ます。
 
 BASICからは、MONITORコマンドでモニタに戻ります。
+
 TINY BASICからは、BYEコマンドでモニタに戻ります。
+
 GAME80インタプリタからは、>=3でモニタに戻ります。
 
 
 モニターの操作方法ですが、？コマンドで以下のヘルプが出ます。
+
 詳細は、MoniorDEbugCommand Document.txtを参照してください。
 
-　　? :Command Help
 
-#L|<num> :Launch program
+　　? :Command Help
+    #L|<num> :Launch program
 
   A[<address>] : Mini Assemble mode
 　
@@ -88,7 +96,11 @@ Rev.B02.2 リリース
 
 2022.12.11
 Rev.B03 リリース
+
 ・アセンブルコマンド追加
+  
 ・PALO ALTO TINY BASIC
+  
 ・GAME80インタプリタ
+  
 ・GAME80コンパイラ
