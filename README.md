@@ -56,35 +56,21 @@ GAME80インタプリタからは、>=3でモニタに戻ります。
 詳細は、MoniorDEbugCommand Document.txtを参照してください。
 
 
-　　? :Command Help
-    #L|<num> :Launch program
-
-  A[<address>] : Mini Assemble mode
-　
-  B[1|2[,<adr>]] :Set or List Break Point
-　
-  BC[1|2] :Clear Break Point
-　
-  D[<adr>] :Dump Memory
-　
-  DI[<adr>][,s<steps>|<adr>] :Disassemble
-　
-  G[<adr>][,<stop adr>] :Go and Stop
-　
-  L :Load HexFile
-　
-  P[I|S] :Save HexFile(I:Intel,S:Motorola)
-　
-  R[<reg>] :Set or Dump register
-　
-  S[<adr>] :Set Memory
-　
-  T[<adr>][,<steps>|-1] : Trace command
-　
-  TM[I|S] :Trace Option for CALL
-　
-  TP[ON|OFF] :Trace Print Mode
-
+? :Command Help
+#L|<num> :Launch program
+A[<address>] : Mini Assemble mode
+B[1|2[,<adr>]] :Set or List Break Point
+BC[1|2] :Clear Break Point
+D[<adr>] :Dump Memory
+DI[<adr>][,s<steps>|<adr>] :Disassemble
+G[<adr>][,<stop adr>] :Go and Stop
+L :Load HexFile
+P[I|S] :Save HexFile(I:Intel,S:Motorola)
+R[<reg>] :Set or Dump register
+S[<adr>] :Set Memory
+T[<adr>][,<steps>|-1] : Trace command
+TM[I|S] :Trace Option for CALL
+TP[ON|OFF] :Trace Print Mode
   
 2022.10.15
 Rev.B02 リリース
