@@ -1,109 +1,78 @@
-# EMUZ80-MON
-
-2022.11.27 Rev.B02.2をリリースしました。
-
-2022.10.24 Rev.B02.1をリリースしました。
-
-Rev.B02.2
-
-・逆アセンブルで、SRA命令がSET命令と表示される。
-
-　　RAM上のソースでは修正されていましたが、モニタのROMに構成するときに
-  
-　　デグレードしていました。
-
-・RAMで動作する、ミニアセンブラを追加しました。
-
-Rev.2.1
-
-GRANT's Basicのキー入力センス機能に不具合があり、
-
-不具合を修正したバージョン
-
-Rev.B02
-
-・逆アセンブルコマンド追加
-
-Rev.B01
-
 unimonの機能拡張を行いました。
-
 合わせて、GRANT's BASIC版のZ80 BASIC Ver 4.7bも搭載してあります。
 
 電脳伝説さんのオリジナルメモリマップでの動作確認と、
-
 PIC18F47Q84でRAMサイズを12Kまで拡張したファームウエアで
-
 動作させています。
 
 RAM12K版のファームウェアは、メモリマップを以下の様に変更してあります。
 
 ROM 0000H - BFFFH (48K)
-
 RAM C000H - EFFFH (12K)
-
 I/O F000H - FFFFH (4K)
 
 (UART)
-
 FF00H	; UART DATA REGISTOR
-
 FF01H	; UART CONTROL REGISTOR
 
 ＣＬＣを8個使い、メモリの読み書きのベクター割り込み処理はデータ転送の最小限の
-
 処理に留めてあります。
-
 アセンブラは使用していませんので、チューニングの余地はあります。
-
 BASICのASCIIARTは、2.5MHZのZ80で1240秒程度でした。
 
 
 PIC18F47Q84_firmwareのフォルダにRAM8KとRAM12K用のファームとヘキサファイル
-
 があります。オリジナルメモリマップを使用すのであれば、RAM8Kを使用してください。
 
-一応PIC18F47Q43_firmwareでRAM4K版も作成しましたが、手元にQ43が無いため、動作
+一応PIC18F47Q43はRev.B03ではサポートしません。ROM、RAMの容量が足らないためです。
 
-確認は出来ていません。RAM4KをQ84で再構成して動作することは確認していますので、
+Rev.B03では、SBCZ80データパックに収録されている
 
-多分大丈夫だと思います。
+・GRANT's BASIC
+・PALO ALTO TINY BASIC
 
-BASICは2000H番地から配置されています。Monitorから、Gコマンドでジャンプするか
+および、
 
-#コマンドでローンチすることが出来ます。
+・GAME80インタプリタ
+・GAME80コンパイラ
 
-BASICからは、MONITORコマンドでMonitorに戻ります。
+を搭載しました。モニタプログラムの＃コマンドで、ローンチすることが出来ます。
+
+BASICからは、MONITORコマンドでモニタに戻ります。
+TINY BASICからは、BYEコマンドでモニタに戻ります。
+GAME80インタプリタからは、>=3でモニタに戻ります。
+
 
 モニターの操作方法ですが、？コマンドで以下のヘルプが出ます。
-
 詳細は、MoniorDEbugCommand Document.txtを参照してください。
 
 　　? :Command Help
-
+　　#L|<num> :Launch program
+　　A[<address>] : Mini Assemble mode
+　　B[1|2[,<adr>]] :Set or List Break Point
+　　BC[1|2] :Clear Break Point
 　　D[<adr>] :Dump Memory
+　　DI[<adr>][,s<steps>|<adr>] :Disassemble
+　　G[<adr>][,<stop adr>] :Go and Stop
+　　L :Load HexFile
+　　P[I|S] :Save HexFile(I:Intel,S:Motorola)
+　　R[<reg>] :Set or Dump register
+　　S[<adr>] :Set Memory
+　　T[<adr>][,<steps>|-1] : Trace command
+　　TM[I|S] :Trace Option for CALL
+　　TP[ON|OFF] :Trace Print Mode
 
-  　S[<adr>] :Set Memory"
+2022.10.15
+Rev.B02 リリース
+・逆アセンブルコマンド追加
 
-  　R[<reg>] :Set or Dump register
+2022.11.28
+Rev.B02.2 リリース
+・バグ修正と、RAMで動作するミニアセンブラ公開
 
-  　G[<adr>][,<stop adr>] :Go and Stop
-  
-　　L :Load HexFile"
-
-  　P[I|S] :Save HexFile(I:Intel,S:Motorola
-
-　  #L|<num> :Launch program
-
-　  B[1|2[,<adr>]] :Set or List Break Point
-
- 　 BC[1|2] :Clear Break Point
-
-  　T[<adr>][,<steps>|-1] : Trace command
-
-  　TP[ON|OFF] :Trace Print Mode
-
-  　TM[I|S] :Trace Option for CALL
-
-  　DI[<adr>][,s<steps>|<adr>] :Disassemble"
-
+2022.12.11
+Rev.B03 リリース
+・アセンブルコマンド追加
+・PALO ALTO TINY BASIC
+・GAME80インタプリタ
+・GAME80コンパイラ

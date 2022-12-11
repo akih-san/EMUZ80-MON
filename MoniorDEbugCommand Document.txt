@@ -5,6 +5,66 @@ EMUZ80_Monitorは、unimonのZ80版をベースにデバッグ機能を強化したものです。
 unimonをカスタマイズするにあたって、unimon-20220811版を使用しています。
 また、emuz80はI/O空間が無いので、関係するOコマンドとPコマンドは削除しました。
 
+＜Rev.B03での注意点＞
+
+・メモリの関係で、PIC18F47Q84（またはQ83)でしか動かすことが出来ません。
+・ROMエリアは32K必要となります。
+
+　　CLCをカスタマイズしているファームウェアでモニタを動作させる場合、
+　　ROMを32Kまで認識するように変更する必要があります。
+
+　　サンプルで提供しているRAM8K版のファームウェアは、電脳伝説さんのオリジナル
+　　ファームをROM16KからROM32Kに変更してあります。
+
+
+＜Rev.B03で追加された機能＞
+
+・アセンブルコマンド（Minimal Assembler)
+
+　　A[<address>] 
+　　
+　　　指定したアドレスから、センブルモードになります
+
+　　　.<cr>　　アセンブルモードから、モニタに戻ります。
+　　　
+＜Minimal Assemblerの仕様＞
+
+ニモニックは、Z80アセンブラの仕様に従います。
+
+＜数字の扱い＞
+・数字は10進数、16進数を扱うものとする。
+・A～Fで始まる数字には、前に0を付ける。
+・16進数は末尾にＨを付ける。
+・数字は16ビット長で扱われる。０～65535
+・数字の助長入力は７文字以上はエラーとなる。（最大0FFFFHの6文字）
+・有効ビット長が8ビットの場合、16ビット長の下位8ビットが有効で上位8ビットは無視される
+
+＜疑似命令＞
+３つだけ、サポートしました。
+
+１．ORG <address>
+
+指定されたアドレスへロケーションカウンタを進めます。
+
+２．DB [1バイト数値 | "文字列"]
+
+1バイトの数値入力、または、"文字列"を入力します。
+DBはサブセットです。「,」で区切っての複数入力はサポートしていません。
+
+３．DW
+
+2バイトの数値入力。
+DWはサブセットです。「,」で区切っての複数入力はサポートしていません。
+
+＜計算式＞
+サポートしていません。
+
+＜リラティブ数値の入力について＞
+
+JR、DJNZで指定するリラティブ数値は、目的のアドレスを入力することで、自動的に計算されます。
+指定アドレスが範囲外の場合、エラーとなります。
+
+
 ＜Rev.B02で追加された機能＞
 
 ・逆アセンブルコマンド（Disassemble）
@@ -53,26 +113,27 @@ unimonをカスタマイズするにあたって、unimon-20220811版を使用しています。
 　　にしました。
 
 
-＜Rev.B01で追加したコマンド＞
+＜コマンド＞
 
-・?コマンド
+・?コマンドヘルプ
 
 　コマンドヘルプで以下のヘルプが表示されます。
 　
 　　? :Command Help
-　　D[<adr>] :Dump Memory
-　　S[<adr>] :Set Memory"
-　　R[<reg>] :Set or Dump register
-　　G[<adr>][,<stop adr>] :Go and Stop
-　　L :Load HexFile"
-　　P[I|S] :Save HexFile(I:Intel,S:Motorola
 　　#L|<num> :Launch program
+　　A[<address>] : Mini Assemble mode
 　　B[1|2[,<adr>]] :Set or List Break Point
 　　BC[1|2] :Clear Break Point
+　　D[<adr>] :Dump Memory
+　　DI[<adr>][,s<steps>|<adr>] :Disassemble
+　　G[<adr>][,<stop adr>] :Go and Stop
+　　L :Load HexFile
+　　P[I|S] :Save HexFile(I:Intel,S:Motorola)
+　　R[<reg>] :Set or Dump register
+　　S[<adr>] :Set Memory
 　　T[<adr>][,<steps>|-1] : Trace command
-　　TP[ON|OFF] :Trace Print Mode
 　　TM[I|S] :Trace Option for CALL
-　　DI[<adr>][,s<steps>|<adr>] :Disassemble"
+　　TP[ON|OFF] :Trace Print Mode
 
 
 ・Bコマンド（ブレークポイント設置関係）
@@ -157,9 +218,12 @@ basicだけですが・・・
 
 　　登録ソフトの表示
 
-　　デフォルトでは
-　　　　1. BASIC4.7b Cold Start
-　　　　2. BASIC4.7b Warm Start
+	1. GBASIC Start"
+	2. GBASIC Restart"
+	3. Palo Alto Tiny BASIC Start
+	4. Palo Alto Tiny BASIC Restart"
+	5. GAME80 Start
+	6. GAME80 Restart
 
 　　と表示されます。
 
@@ -167,6 +231,52 @@ basicだけですが・・・
 
 　　選択したソフトを実行します。
 　　BASICからのunimonへの復帰は、"monitor"コマンドを使います。
+
+・アセンブルコマンド（Minimal Assemble)
+
+　　A[<address>] 
+　　
+　　　指定したアドレスから、センブルモードになります
+
+　　　.<cr>　　アセンブルモードから、モニタに戻ります。
+　　　
+＜Minimal Assemblerの仕様＞
+
+ニモニックは、Z80アセンブラの仕様に従います。
+
+＜数字の扱い＞
+・数字は10進数、16進数を扱うものとする。
+・A～Fで始まる数字には、前に0を付ける。
+・16進数は末尾にＨを付ける。
+・数字は16ビット長で扱われる。０～65535
+・数字の助長入力は７文字以上はエラーとなる。（最大0FFFFHの6文字）
+・有効ビット長が8ビットの場合、16ビット長の下位8ビットが有効で上位8ビットは無視される
+
+＜疑似命令＞
+３つだけ、サポートしました。
+
+１．ORG <address>
+
+指定されたアドレスへロケーションカウンタを進めます。
+
+２．DB [1バイト数値 | "文字列"]
+
+1バイトの数値入力、または、"文字列"を入力します。
+DBはサブセットです。「,」で区切っての複数入力はサポートしていません。
+
+３．DW
+
+2バイトの数値入力。
+DWはサブセットです。「,」で区切っての複数入力はサポートしていません。
+
+＜計算式＞
+サポートしていません。
+
+＜リラティブ数値の入力について＞
+
+JR、DJNZで指定するリラティブ数値は、目的のアドレスを入力することで、自動的に計算されます。
+指定アドレスが範囲外の場合、エラーとなります。
+
 
 以上．
 
