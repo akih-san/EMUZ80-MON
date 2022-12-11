@@ -8,9 +8,7 @@ PIC18F47Q84でRAMサイズを12Kまで拡張したファームウエアで
 RAM12K版のファームウェアは、メモリマップを以下の様に変更してあります。
 
 ROM 0000H - BFFFH (48K)
-
 RAM C000H - EFFFH (12K)
-
 I/O F000H - FFFFH (4K)
 
 (UART)
