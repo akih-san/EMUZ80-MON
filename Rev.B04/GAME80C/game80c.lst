@@ -1,0 +1,3697 @@
+ AS V1.42 Beta [Bld 227] - Source File game80c.asm - Page 1 - 1/17/2023 21:56:29
+
+
+       1/       0 :                     	page 0
+       2/       0 :                     	cpu z80
+       3/       0 :                     
+       4/       0 : =0H                  SuperMEZ80 = 0
+       5/       0 : =0H                  SMEZ80Full = 0
+       6/       0 : =0H                  SBCZ80 = 0
+       7/       0 : =0H                  RAM12K = 0
+       8/       0 : =1H                  RAM8K = 1
+       9/       0 : =0H                  ORGMAP = 0
+      10/       0 :                     
+      11/       0 : =>FALSE              	if	SuperMEZ80
+      12/       0 :                     GAME_WORK	equ	800H
+      13/       0 : [11]                 	endif
+      14/       0 : =>FALSE              	if	SMEZ80Full
+      15/       0 :                     GAME_WORK	equ	8000H
+      16/       0 : [14]                 	endif
+      17/       0 : =>TRUE               	if	RAM8K
+      18/       0 : =8000H               GAME_WORK	equ	8000H
+      19/       0 : [17]                 	endif
+      20/       0 : =>FALSE              	if	RAM12K
+      21/       0 :                     GAME_WORK	equ	0C000H
+      22/       0 : [20]                 	endif
+      23/       0 : =>FALSE              	if	SBCZ80
+      24/       0 :                     GAME_WORK	equ	8000H
+      25/       0 : [23]                 	endif
+      26/       0 :                     
+      27/       0 : =>FALSE              	if	SuperMEZ80 = 1
+      28/       0 :                     GAME80_TOP	equ	40H
+      29/       0 :                     GAME80C_TOP	equ	0B600H
+      30/       0 : =>TRUE               	else
+      31/       0 : =5400H               GAME80_TOP	equ	5400H
+      32/       0 : =5B00H               GAME80C_TOP	equ	5B00H
+      33/       0 : [27]                 	endif
+      34/       0 :                     
+      35/       0 : =5403H               C_8603	equ	GAME80_TOP + 03H
+      36/       0 : =5406H               C_8C96	equ	GAME80_TOP + 06H
+      37/       0 : =5409H               C_8C99	equ	GAME80_TOP + 09H
+      38/       0 : =540FH               C_8785	equ	GAME80_TOP + 0FH
+      39/       0 : =5412H               C_8872	equ	GAME80_TOP + 12H
+      40/       0 : =5415H               C_8881	equ	GAME80_TOP + 15H
+      41/       0 : =5418H               C_889E	equ	GAME80_TOP + 18H
+      42/       0 : =541BH               C_8904	equ	GAME80_TOP + 1BH
+      43/       0 : =541EH               C_8A03	equ	GAME80_TOP + 1EH
+      44/       0 : =5421H               C_8A0F	equ	GAME80_TOP + 21H
+      45/       0 : =5424H               C_8A2C	equ	GAME80_TOP + 24H
+      46/       0 : =5427H               C_8A5B	equ	GAME80_TOP + 27H
+      47/       0 : =542AH               C_8B58	equ	GAME80_TOP + 2AH
+      48/       0 : =542DH               C_8B85	equ	GAME80_TOP + 2DH
+      49/       0 : =5430H               C_8B9C	equ	GAME80_TOP + 30H
+      50/       0 : =5433H               C_8C26	equ	GAME80_TOP + 33H
+      51/       0 : =5436H               C_8C31	equ	GAME80_TOP + 36H
+      52/       0 : =5439H               C_8C32	equ	GAME80_TOP + 39H
+      53/       0 : =543CH               C_8C83	equ	GAME80_TOP + 3CH
+      54/       0 :                     
+      55/    5B00 :                     	ORG	GAME80C_TOP
+      56/    5B00 :                     
+      57/    5B00 : 21 20 74            	ld	hl, STR_1
+      58/    5B03 : CD 0F 54            	CALL	C_8785		; "**  GAME80 COMPILER **"
+      59/    5B06 : CD 3C 54            	CALL	C_8C83
+      60/    5B09 :                     
+      61/    5B09 : 21 37 74            	ld	hl, STR_2	; "GAME PROGRAM FROM($"
+      62/    5B0C : CD 0F 54            	CALL	C_8785
+      63/    5B0F : 11 00 81            	LD	DE,PROG_START	; get program start addr?
+      64/    5B12 : 42                  	LD	B,D
+      65/    5B13 : CD 39 54            	CALL	C_8C32
+      66/    5B16 : CD 36 54            	CALL	C_8C31		; 4HEX output
+      67/    5B19 : 21 6C 74            	LD	HL,STR_5
+      68/    5B1C : CD 0F 54            	CALL	C_8785		; ") = "
+      69/    5B1F :                     
+      70/    5B1F : D5                  	PUSH	DE
+      71/    5B20 : CD 1B 54            	CALL	C_8904		; input address
+      72/    5B23 : EB                  	EX	DE,HL
+      73/    5B24 : D1                  	POP	DE
+      74/    5B25 : 22 12 80            	LD	(V_12H),HL
+      75/    5B28 : 7D                  	LD	A,L
+      76/    5B29 : B4                  	OR	H
+      77/    5B2A : C2 33 5B            	JP	NZ,inp_staddr
+      78/    5B2D : 21 00 81            	LD	HL,PROG_START
+      79/    5B30 : 22 12 80            	LD	(V_12H),HL	; set default
+      80/    5B33 :                     
+      81/    5B33 :                     inp_staddr:
+      82/    5B33 : 21 4B 74            	ld	hl, STR_3
+      83/    5B36 : CD 0F 54            	CALL	C_8785		; "START ADRRESS($"
+      84/    5B39 :                     
+      85/    5B39 : 2A 50 80            	LD	HL,(V_50H)
+      86/    5B3C : 11 00 04            	LD	DE,0400H
+      87/    5B3F : 19                  	ADD	HL,DE
+      88/    5B40 : EB                  	EX	DE, HL
+      89/    5B41 : 42                  	LD	B,D
+      90/    5B42 : CD 39 54            	CALL	C_8C32
+      91/    5B45 : CD 36 54            	CALL	C_8C31		; 4HEX output
+      92/    5B48 : ED 53 2A 80         	LD	(V_2AH),DE
+      93/    5B4C : 21 6C 74            	LD	HL,STR_5
+      94/    5B4F : CD 0F 54            	CALL	C_8785		; ") = "
+      95/    5B52 : D5                  	PUSH	DE
+      96/    5B53 : CD 1B 54            	CALL	C_8904
+      97/    5B56 : EB                  	EX	DE,HL
+      98/    5B57 : D1                  	POP	DE
+      99/    5B58 : 7D                  	LD	A, L
+     100/    5B59 : B4                  	OR	H
+     101/    5B5A : CA 60 5B            	JP	Z, inp_waddr
+     102/    5B5D : 22 2A 80            	LD	(V_2AH),HL
+     103/    5B60 :                     
+     104/    5B60 :                     inp_waddr:
+     105/    5B60 : 21 5B 74            	LD	HL,STR_4
+     106/    5B63 : CD 0F 54            	CALL	C_8785		; "WORK AREA FROM($"
+     107/    5B66 :                     
+     108/    5B66 : 2A 50 80            	LD	HL,(V_50H)
+     109/    5B69 : EB                  	EX	DE,HL
+     110/    5B6A : 21 10 00            	LD	HL,010H
+     111/    5B6D : 19                  	ADD	HL,DE
+     112/    5B6E : EB                  	EX	DE,HL
+     113/    5B6F : 42                  	LD	B,D
+     114/    5B70 : CD 39 54            	CALL	C_8C32
+     115/    5B73 : CD 36 54            	CALL	C_8C31		; 4HEX output
+     116/    5B76 : ED 53 1C 80         	LD	(V_1CH),DE	; save default
+     117/    5B7A : 21 6C 74            	LD	HL,STR_5
+     118/    5B7D : CD 0F 54            	CALL	C_8785		; ") = "
+     119/    5B80 :                     
+     120/    5B80 : D5                  	PUSH	DE
+     121/    5B81 : CD 1B 54            	CALL	C_8904
+     122/    5B84 : EB                  	EX	DE,HL
+     123/    5B85 : D1                  	POP	DE
+     124/    5B86 : 7D                  	LD	A,L
+     125/    5B87 : B4                  	OR	H
+     126/    5B88 : CA 8E 5B            	JP	Z,START_CPL
+     127/    5B8B : 22 1C 80            	LD	(V_1CH),HL
+     128/    5B8E :                     
+     129/    5B8E :                     START_CPL:
+     130/    5B8E : D5                  	PUSH	DE
+     131/    5B8F : 21 02 00            	LD	HL,02H
+     132/    5B92 : EB                  	EX	DE,HL
+     133/    5B93 : CD 27 54            	CALL	C_8A5B
+     134/    5B96 : EB                  	EX	DE,HL
+     135/    5B97 : D1                  	POP	DE
+     136/    5B98 : EB                  A_001:	EX	DE,HL
+     137/    5B99 : 2A 1C 80            	LD	HL,(V_1CH)
+     138/    5B9C : 19                  	ADD	HL,DE
+     139/    5B9D : 19                  	ADD	HL,DE
+     140/    5B9E : E5                  	PUSH	HL
+     141/    5B9F : 2A 12 80            	LD	HL,(V_12H)
+     142/    5BA2 : EB                  	EX	DE,HL
+     143/    5BA3 : E1                  	POP	HL
+     144/    5BA4 : 73                  	LD	(HL),E
+     145/    5BA5 : 23                  	INC	HL
+     146/    5BA6 : 72                  	LD	(HL),D
+     147/    5BA7 : 2A 2A 80            	LD	HL,(V_2AH)
+     148/    5BAA : 22 06 80            	LD	(V_06H),HL
+     149/    5BAD : 21 01 00            	LD	HL,01H
+     150/    5BB0 : 22 24 80            	LD	(V_24H),HL
+     151/    5BB3 : CD 51 5C            	CALL	A_003
+     152/    5BB6 : D5                  	PUSH	DE
+     153/    5BB7 : 21 01 00            	LD	HL,01H
+     154/    5BBA : EB                  	EX	DE,HL
+     155/    5BBB : CD 27 54            	CALL	C_8A5B
+     156/    5BBE : EB                  	EX	DE,HL
+     157/    5BBF : D1                  	POP	DE
+     158/    5BC0 : EB                  	EX	DE,HL
+     159/    5BC1 : 2A 1C 80            	LD	HL,(V_1CH)
+     160/    5BC4 : 19                  	ADD	HL,DE
+     161/    5BC5 : 19                  	ADD	HL,DE
+     162/    5BC6 : E5                  	PUSH	HL
+     163/    5BC7 : 2A 06 80            	LD	HL,(V_06H)
+     164/    5BCA : EB                  	EX	DE,HL
+     165/    5BCB : E1                  	POP	HL
+     166/    5BCC : 73                  	LD	(HL),E
+     167/    5BCD : 23                  	INC	HL
+     168/    5BCE : 72                  	LD	(HL),D
+     169/    5BCF : 2A 2A 80            	LD	HL,(V_2AH)
+     170/    5BD2 : 22 06 80            	LD	(V_06H),HL
+     171/    5BD5 : 21 06 80            	LD	HL,V_06H
+     172/    5BD8 : 22 0C 80            	LD	(V_0CH),HL
+     173/    5BDB : D5                  	PUSH	DE
+     174/    5BDC : D5                  	PUSH	DE
+     175/    5BDD : 21 02 00            	LD	HL,02H
+     176/    5BE0 : EB                  	EX	DE,HL
+     177/    5BE1 : CD 27 54            	CALL	C_8A5B
+     178/    5BE4 : EB                  	EX	DE,HL
+     179/    5BE5 : D1                  	POP	DE
+     180/    5BE6 : EB                  	EX	DE,HL
+     181/    5BE7 : 2A 1C 80            	LD	HL,(V_1CH)
+     182/    5BEA : 19                  	ADD	HL,DE
+     183/    5BEB : 19                  	ADD	HL,DE
+     184/    5BEC : D1                  	POP	DE
+     185/    5BED : 7E                  	LD	A,(HL)
+     186/    5BEE : 23                  	INC	HL
+     187/    5BEF : 66                  	LD	H,(HL)
+     188/    5BF0 : 6F                  	LD	L,A
+     189/    5BF1 : 22 12 80            	LD	(V_12H),HL
+     190/    5BF4 : 21 02 00            	LD	HL,02H
+     191/    5BF7 : 22 24 80            	LD	(V_24H),HL
+     192/    5BFA : CD 51 5C            	CALL	A_003
+     193/    5BFD :                     
+     194/    5BFD : 21 71 74            	ld	hl, STR_6
+     195/    5C00 : CD 0F 54            	CALL	C_8785
+     196/    5C03 : 2A 06 80            	LD	HL,(V_06H)
+     197/    5C06 : EB                  	EX	DE,HL
+     198/    5C07 : 2A 2A 80            	LD	HL,(V_2AH)
+     199/    5C0A : CD 1E 54            	CALL	C_8A03
+     200/    5C0D : CD 33 54            	CALL	C_8C26
+     201/    5C10 :                     
+     202/    5C10 : 21 80 74            A_004:	LD	HL,STR_7
+     203/    5C13 : CD 0F 54            	CALL	C_8785
+     204/    5C16 : 2A 2A 80            	LD	HL,(V_2AH)
+     205/    5C19 : EB                  	EX	DE,HL
+     206/    5C1A : D5                  	PUSH	DE
+     207/    5C1B : 42                  	LD	B,D
+     208/    5C1C : CD 39 54            	CALL	C_8C32
+     209/    5C1F : D1                  	POP	DE
+     210/    5C20 : CD 36 54            	CALL	C_8C31
+     211/    5C23 :                     
+     212/    5C23 : 21 82 74            A_006:	LD	HL,STR_8
+     213/    5C26 : CD 0F 54            	CALL	C_8785
+     214/    5C29 : 2A 06 80            	LD	HL,(V_06H)
+     215/    5C2C : EB                  	EX	DE,HL
+     216/    5C2D : 21 01 00            	LD	HL,01H
+     217/    5C30 : CD 1E 54            	CALL	C_8A03
+     218/    5C33 : D5                  	PUSH	DE
+     219/    5C34 : 42                  	LD	B,D
+     220/    5C35 : CD 39 54            	CALL	C_8C32
+     221/    5C38 : D1                  	POP	DE
+     222/    5C39 : CD 36 54            	CALL	C_8C31
+     223/    5C3C :                     
+     224/    5C3C : 21 84 74            A_008:	LD	HL,STR_9
+     225/    5C3F : CD 0F 54            	CALL	C_8785
+     226/    5C42 : CD 3C 54            	CALL	C_8C83		; /
+     227/    5C45 :                     
+     228/    5C45 : 21 86 74            A_010:	LD	HL,STR_10
+     229/    5C48 : CD 0F 54            	CALL	C_8785
+     230/    5C4B : CD 3C 54            	call	C_8C83		;CRLF
+     231/    5C4E : C3 03 54            	JP	C_8603
+     232/    5C51 :                     
+     233/    5C51 : 21 00 00            A_003:	LD	HL,00H
+     234/    5C54 : 22 22 80            	LD	(V_22H),HL
+     235/    5C57 : D5                  A_061:	PUSH	DE
+     236/    5C58 : 21 00 00            	LD	HL,00H
+     237/    5C5B : EB                  	EX	DE,HL
+     238/    5C5C : 2A 12 80            	LD	HL,(V_12H)
+     239/    5C5F : 19                  	ADD	HL,DE
+     240/    5C60 : D1                  	POP	DE
+     241/    5C61 : 6E                  	LD	L,(HL)
+     242/    5C62 : 26 00               	LD	H,00H
+     243/    5C64 : EB                  	EX	DE,HL
+     244/    5C65 : 21 00 01            	LD	HL,0100H
+     245/    5C68 : CD 21 54            	CALL	C_8A0F
+     246/    5C6B : D5                  	PUSH	DE
+     247/    5C6C : 21 01 00            	LD	HL,01H
+     248/    5C6F : EB                  	EX	DE,HL
+     249/    5C70 : 2A 12 80            	LD	HL,(V_12H)
+     250/    5C73 : 19                  	ADD	HL,DE
+     251/    5C74 : D1                  	POP	DE
+     252/    5C75 : 6E                  	LD	L,(HL)
+     253/    5C76 : 26 00               	LD	H,00H
+     254/    5C78 : 19                  	ADD	HL,DE
+     255/    5C79 : 22 30 80            	LD	(V_30H),HL
+     256/    5C7C : D5                  	PUSH	DE
+     257/    5C7D : 21 00 00            	LD	HL,00H
+     258/    5C80 : EB                  	EX	DE,HL
+     259/    5C81 : 2A 12 80            	LD	HL,(V_12H)
+     260/    5C84 : 19                  	ADD	HL,DE
+     261/    5C85 : D1                  	POP	DE
+     262/    5C86 : 6E                  	LD	L,(HL)
+     263/    5C87 : 26 00               	LD	H,00H
+     264/    5C89 : EB                  	EX	DE,HL
+     265/    5C8A : 21 80 00            	LD	HL,080H
+     266/    5C8D : CD 1E 54            	CALL	C_8A03
+     267/    5C90 : FA F3 5C            	JP	M,A_012
+     268/    5C93 : 2A 22 80            	LD	HL,(V_22H)
+     269/    5C96 : EB                  	EX	DE,HL
+     270/    5C97 : 2A 1C 80            	LD	HL,(V_1CH)
+     271/    5C9A : 19                  	ADD	HL,DE
+     272/    5C9B : 19                  	ADD	HL,DE
+     273/    5C9C : E5                  	PUSH	HL
+     274/    5C9D : 21 FF 7F            	LD	HL,07FFFH
+     275/    5CA0 : EB                  	EX	DE,HL
+     276/    5CA1 : E1                  	POP	HL
+     277/    5CA2 : 73                  	LD	(HL),E
+     278/    5CA3 : 23                  	INC	HL
+     279/    5CA4 : 72                  	LD	(HL),D
+     280/    5CA5 : 2A 22 80            	LD	HL,(V_22H)
+     281/    5CA8 : EB                  	EX	DE,HL
+     282/    5CA9 : 21 01 00            	LD	HL,01H
+     283/    5CAC : 19                  	ADD	HL,DE
+     284/    5CAD : EB                  	EX	DE,HL
+     285/    5CAE : 2A 1C 80            	LD	HL,(V_1CH)
+     286/    5CB1 : 19                  	ADD	HL,DE
+     287/    5CB2 : 19                  	ADD	HL,DE
+     288/    5CB3 : E5                  	PUSH	HL
+     289/    5CB4 : 21 03 54            	LD	HL,C_8603
+     290/    5CB7 : EB                  	EX	DE,HL
+     291/    5CB8 : E1                  	POP	HL
+     292/    5CB9 : 73                  	LD	(HL),E
+     293/    5CBA : 23                  	INC	HL
+     294/    5CBB : 72                  	LD	(HL),D
+     295/    5CBC : 21 00 00            	LD	HL,00H
+     296/    5CBF : EB                  	EX	DE,HL
+     297/    5CC0 : 2A 06 80            	LD	HL,(V_06H)
+     298/    5CC3 : 19                  	ADD	HL,DE
+     299/    5CC4 : E5                  	PUSH	HL
+     300/    5CC5 : 21 C3 00            	LD	HL,0C3H
+     301/    5CC8 : EB                  	EX	DE,HL
+     302/    5CC9 : E1                  	POP	HL
+     303/    5CCA : 73                  	LD	(HL),E
+     304/    5CCB : 2A 06 80            	LD	HL,(V_06H)
+     305/    5CCE : EB                  	EX	DE,HL
+     306/    5CCF : 21 03 00            	LD	HL,03H
+     307/    5CD2 : 19                  	ADD	HL,DE
+     308/    5CD3 : 22 06 80            	LD	(V_06H),HL
+     309/    5CD6 : D5                  	PUSH	DE
+     310/    5CD7 : 21 01 00            	LD	HL,01H
+     311/    5CDA : EB                  	EX	DE,HL
+     312/    5CDB : CD 27 54            	CALL	C_8A5B
+     313/    5CDE : EB                  	EX	DE,HL
+     314/    5CDF : D1                  	POP	DE
+     315/    5CE0 : EB                  	EX	DE,HL
+     316/    5CE1 : 2A 06 80            	LD	HL,(V_06H)
+     317/    5CE4 : 19                  	ADD	HL,DE
+     318/    5CE5 : 19                  	ADD	HL,DE
+     319/    5CE6 : E5                  	PUSH	HL
+     320/    5CE7 : 21 03 54            	LD	HL,C_8603
+     321/    5CEA : EB                  	EX	DE,HL
+     322/    5CEB : E1                  	POP	HL
+     323/    5CEC : 73                  	LD	(HL),E
+     324/    5CED : 23                  	INC	HL
+     325/    5CEE : 72                  	LD	(HL),D
+     326/    5CEF : CD 3C 54            	CALL	C_8C83		; /
+     327/    5CF2 : C9                  	RET
+     328/    5CF3 :                     
+     329/    5CF3 : CD 3C 54            A_012:	CALL	C_8C83		; /
+     330/    5CF6 : D5                  	PUSH	DE
+     331/    5CF7 : 21 05 00            	LD	HL,05H
+     332/    5CFA : D1                  	POP	DE
+     333/    5CFB : 4D                  	LD	C,L
+     334/    5CFC : C5                  	PUSH	BC
+     335/    5CFD : 2A 30 80            	LD	HL,(V_30H)
+     336/    5D00 : EB                  	EX	DE,HL
+     337/    5D01 : C1                  	POP	BC
+     338/    5D02 : CD 30 54            	CALL	C_8B9C
+     339/    5D05 : 21 05 00            	LD	HL,05H		; .=5
+     340/    5D08 : EB                  	EX	DE,HL
+     341/    5D09 : CD 2A 54            	CALL	C_8B58		; tab
+     342/    5D0C : 2A 06 80            	LD	HL,(V_06H)
+     343/    5D0F : EB                  	EX	DE,HL
+     344/    5D10 : D5                  	PUSH	DE
+     345/    5D11 : 42                  	LD	B,D
+     346/    5D12 : CD 39 54            	CALL	C_8C32
+     347/    5D15 : D1                  	POP	DE
+     348/    5D16 : CD 36 54            	CALL	C_8C31
+     349/    5D19 : 21 05 00            	LD	HL,05H		; .=5
+     350/    5D1C : EB                  	EX	DE,HL
+     351/    5D1D : CD 2A 54            	CALL	C_8B58		; tab
+     352/    5D20 : 2A 12 80            	LD	HL,(V_12H)
+     353/    5D23 : EB                  	EX	DE,HL
+     354/    5D24 : D5                  	PUSH	DE
+     355/    5D25 : 42                  	LD	B,D
+     356/    5D26 : CD 39 54            	CALL	C_8C32
+     357/    5D29 : D1                  	POP	DE
+     358/    5D2A : CD 36 54            	CALL	C_8C31
+     359/    5D2D : 2A 24 80            	LD	HL,(V_24H)
+     360/    5D30 : EB                  	EX	DE,HL
+     361/    5D31 : 21 01 00            	LD	HL,01H
+     362/    5D34 : CD 1E 54            	CALL	C_8A03
+     363/    5D37 : B3                  	OR	E
+     364/    5D38 : C2 6F 5D            	JP	NZ,A_013
+     365/    5D3B : 2A 22 80            	LD	HL,(V_22H)
+     366/    5D3E : EB                  	EX	DE,HL
+     367/    5D3F : 2A 1C 80            	LD	HL,(V_1CH)
+     368/    5D42 : 19                  	ADD	HL,DE
+     369/    5D43 : 19                  	ADD	HL,DE
+     370/    5D44 : E5                  	PUSH	HL
+     371/    5D45 : 2A 30 80            	LD	HL,(V_30H)
+     372/    5D48 : EB                  	EX	DE,HL
+     373/    5D49 : E1                  	POP	HL
+     374/    5D4A : 73                  	LD	(HL),E
+     375/    5D4B : 23                  	INC	HL
+     376/    5D4C : 72                  	LD	(HL),D
+     377/    5D4D : 2A 22 80            	LD	HL,(V_22H)
+     378/    5D50 : EB                  	EX	DE,HL
+     379/    5D51 : 21 01 00            	LD	HL,01H
+     380/    5D54 : 19                  	ADD	HL,DE
+     381/    5D55 : EB                  	EX	DE,HL
+     382/    5D56 : 2A 1C 80            	LD	HL,(V_1CH)
+     383/    5D59 : 19                  	ADD	HL,DE
+     384/    5D5A : 19                  	ADD	HL,DE
+     385/    5D5B : E5                  	PUSH	HL
+     386/    5D5C : 2A 06 80            	LD	HL,(V_06H)
+     387/    5D5F : EB                  	EX	DE,HL
+     388/    5D60 : E1                  	POP	HL
+     389/    5D61 : 73                  	LD	(HL),E
+     390/    5D62 : 23                  	INC	HL
+     391/    5D63 : 72                  	LD	(HL),D
+     392/    5D64 : 2A 22 80            	LD	HL,(V_22H)
+     393/    5D67 : EB                  	EX	DE,HL
+     394/    5D68 : 21 02 00            	LD	HL,02H
+     395/    5D6B : 19                  	ADD	HL,DE
+     396/    5D6C : 22 22 80            	LD	(V_22H),HL
+     397/    5D6F : 2A 12 80            A_013:	LD	HL,(V_12H)
+     398/    5D72 : EB                  	EX	DE,HL
+     399/    5D73 : 21 03 00            	LD	HL,03H
+     400/    5D76 : 19                  	ADD	HL,DE
+     401/    5D77 : 22 12 80            	LD	(V_12H),HL
+     402/    5D7A : D5                  	PUSH	DE
+     403/    5D7B : D5                  	PUSH	DE
+     404/    5D7C : 21 01 00            	LD	HL,01H
+     405/    5D7F : EB                  	EX	DE,HL
+     406/    5D80 : CD 27 54            	CALL	C_8A5B
+     407/    5D83 : EB                  	EX	DE,HL
+     408/    5D84 : D1                  	POP	DE
+     409/    5D85 : EB                  	EX	DE,HL
+     410/    5D86 : 2A 12 80            	LD	HL,(V_12H)
+     411/    5D89 : 19                  	ADD	HL,DE
+     412/    5D8A : D1                  	POP	DE
+     413/    5D8B : 6E                  	LD	L,(HL)
+     414/    5D8C : 26 00               	LD	H,00H
+     415/    5D8E : EB                  	EX	DE,HL
+     416/    5D8F : 21 20 00            	LD	HL,020H
+     417/    5D92 : CD 1E 54            	CALL	C_8A03
+     418/    5D95 : B3                  	OR	E
+     419/    5D96 : CA 9C 5D            	JP	Z,A_014
+     420/    5D99 : C3 6D 61            	JP	A_015
+     421/    5D9C : D5                  A_014:	PUSH	DE
+     422/    5D9D : 21 00 00            	LD	HL,00H
+     423/    5DA0 : EB                  	EX	DE,HL
+     424/    5DA1 : 2A 12 80            	LD	HL,(V_12H)
+     425/    5DA4 : 19                  	ADD	HL,DE
+     426/    5DA5 : D1                  	POP	DE
+     427/    5DA6 : 6E                  	LD	L,(HL)
+     428/    5DA7 : 26 00               	LD	H,00H
+     429/    5DA9 : 22 20 80            	LD	(V_20H),HL
+     430/    5DAC : 2A 20 80            	LD	HL,(V_20H)
+     431/    5DAF : EB                  	EX	DE,HL
+     432/    5DB0 : 21 23 00            	LD	HL,023H
+     433/    5DB3 : CD 1E 54            	CALL	C_8A03
+     434/    5DB6 : B3                  	OR	E
+     435/    5DB7 : C2 C3 5D            	JP	NZ,A_016
+     436/    5DBA : 21 C3 00            	LD	HL,0C3H
+     437/    5DBD : 22 26 80            	LD	(V_26H),HL
+     438/    5DC0 : C3 9D 61            	JP	A_017
+     439/    5DC3 : 2A 20 80            A_016:	LD	HL,(V_20H)
+     440/    5DC6 : EB                  	EX	DE,HL
+     441/    5DC7 : 21 21 00            	LD	HL,021H
+     442/    5DCA : CD 1E 54            	CALL	C_8A03
+     443/    5DCD : B3                  	OR	E
+     444/    5DCE : C2 DA 5D            	JP	NZ,A_018
+     445/    5DD1 : 21 CD 00            	LD	HL,0CDH
+     446/    5DD4 : 22 26 80            	LD	(V_26H),HL
+     447/    5DD7 : C3 9D 61            	JP	A_017
+     448/    5DDA : 2A 20 80            A_018:	LD	HL,(V_20H)
+     449/    5DDD : EB                  	EX	DE,HL
+     450/    5DDE : 21 5D 00            	LD	HL,05DH
+     451/    5DE1 : CD 1E 54            	CALL	C_8A03
+     452/    5DE4 : B3                  	OR	E
+     453/    5DE5 : C2 EB 5D            	JP	NZ,A_019
+     454/    5DE8 : C3 C9 61            	JP	A_020
+     455/    5DEB : 2A 20 80            A_019:	LD	HL,(V_20H)
+     456/    5DEE : EB                  	EX	DE,HL
+     457/    5DEF : 21 2F 00            	LD	HL,02FH
+     458/    5DF2 : CD 1E 54            	CALL	C_8A03
+     459/    5DF5 : B3                  	OR	E
+     460/    5DF6 : C2 0D 5E            	JP	NZ,A_021
+     461/    5DF9 : 2A 12 80            	LD	HL,(V_12H)
+     462/    5DFC : EB                  	EX	DE,HL
+     463/    5DFD : 21 01 00            	LD	HL,01H
+     464/    5E00 : 19                  	ADD	HL,DE
+     465/    5E01 : 22 12 80            	LD	(V_12H),HL
+     466/    5E04 : 21 3C 54            	LD	HL,C_8C83
+     467/    5E07 : 22 38 80            	LD	(V_38H),HL
+     468/    5E0A : C3 F3 65            	JP	A_022
+     469/    5E0D : 2A 20 80            A_021:	LD	HL,(V_20H)
+     470/    5E10 : EB                  	EX	DE,HL
+     471/    5E11 : 21 22 00            	LD	HL,022H
+     472/    5E14 : CD 1E 54            	CALL	C_8A03
+     473/    5E17 : B3                  	OR	E
+     474/    5E18 : C2 1E 5E            	JP	NZ,A_023
+     475/    5E1B : C3 65 63            	JP	A_024
+     476/    5E1E : 2A 20 80            A_023:	LD	HL,(V_20H)
+     477/    5E21 : EB                  	EX	DE,HL
+     478/    5E22 : 21 3F 00            	LD	HL,03FH
+     479/    5E25 : CD 1E 54            	CALL	C_8A03
+     480/    5E28 : B3                  	OR	E
+     481/    5E29 : C2 2F 5E            	JP	NZ,A_025
+     482/    5E2C : C3 73 64            	JP	A_026
+     483/    5E2F : D5                  A_025:	PUSH	DE
+     484/    5E30 : 2A 20 80            	LD	HL,(V_20H)
+     485/    5E33 : EB                  	EX	DE,HL
+     486/    5E34 : 21 41 00            	LD	HL,041H
+     487/    5E37 : CD 1E 54            	CALL	C_8A03
+     488/    5E3A : 11 00 00            	LD	DE,00H
+     489/    5E3D : FA 41 5E            	JP	M,A_027
+     490/    5E40 : 1C                  	INC	E
+     491/    5E41 : EB                  A_027:	EX	DE,HL
+     492/    5E42 : D1                  	POP	DE
+     493/    5E43 : EB                  	EX	DE,HL
+     494/    5E44 : D5                  	PUSH	DE
+     495/    5E45 : 2A 20 80            	LD	HL,(V_20H)
+     496/    5E48 : EB                  	EX	DE,HL
+     497/    5E49 : 21 5A 00            	LD	HL,05AH
+     498/    5E4C : EB                  	EX	DE,HL
+     499/    5E4D : CD 1E 54            	CALL	C_8A03
+     500/    5E50 : 11 00 00            	LD	DE,00H
+     501/    5E53 : FA 57 5E            	JP	M,A_028
+     502/    5E56 : 1C                  	INC	E
+     503/    5E57 : EB                  A_028:	EX	DE,HL
+     504/    5E58 : D1                  	POP	DE
+     505/    5E59 : CD 21 54            	CALL	C_8A0F
+     506/    5E5C : 7B                  	LD	A,E
+     507/    5E5D : B2                  	OR	D
+     508/    5E5E : CA 64 5E            	JP	Z,A_029
+     509/    5E61 : C3 B3 6E            	JP	A_030
+     510/    5E64 : 2A 20 80            A_029:	LD	HL,(V_20H)
+     511/    5E67 : EB                  	EX	DE,HL
+     512/    5E68 : 21 3B 00            	LD	HL,03BH
+     513/    5E6B : CD 1E 54            	CALL	C_8A03
+     514/    5E6E : B3                  	OR	E
+     515/    5E6F : C2 75 5E            	JP	NZ,A_031
+     516/    5E72 : C3 C7 70            	JP	A_032
+     517/    5E75 : 2A 20 80            A_031:	LD	HL,(V_20H)
+     518/    5E78 : EB                  	EX	DE,HL
+     519/    5E79 : 21 40 00            	LD	HL,040H
+     520/    5E7C : CD 1E 54            	CALL	C_8A03
+     521/    5E7F : B3                  	OR	E
+     522/    5E80 : C2 86 5E            	JP	NZ,A_033
+     523/    5E83 : C3 8F 71            	JP	A_034
+     524/    5E86 : 2A 20 80            A_033:	LD	HL,(V_20H)
+     525/    5E89 : EB                  	EX	DE,HL
+     526/    5E8A : 21 2E 00            	LD	HL,02EH
+     527/    5E8D : CD 1E 54            	CALL	C_8A03
+     528/    5E90 : B3                  	OR	E
+     529/    5E91 : C2 A8 5E            	JP	NZ,A_035
+     530/    5E94 : 2A 12 80            	LD	HL,(V_12H)
+     531/    5E97 : EB                  	EX	DE,HL
+     532/    5E98 : 21 02 00            	LD	HL,02H
+     533/    5E9B : 19                  	ADD	HL,DE
+     534/    5E9C : 22 12 80            	LD	(V_12H),HL
+     535/    5E9F : 21 2A 54            	LD	HL,C_8B58
+     536/    5EA2 : 22 38 80            	LD	(V_38H),HL
+     537/    5EA5 : C3 F0 65            	JP	A_036
+     538/    5EA8 :                     
+     539/    5EA8 : 2A 20 80            A_035:	LD	HL,(V_20H)
+     540/    5EAB : EB                  	EX	DE,HL
+     541/    5EAC : 21 3E 00            	LD	HL,03EH
+     542/    5EAF : CD 1E 54            	CALL	C_8A03
+     543/    5EB2 : B3                  	OR	E
+     544/    5EB3 : C2 CD 5E            	JP	NZ,A_037
+     545/    5EB6 : 2A 12 80            	LD	HL,(V_12H)
+     546/    5EB9 : EB                  	EX	DE,HL
+     547/    5EBA : 21 02 00            	LD	HL,02H
+     548/    5EBD : 19                  	ADD	HL,DE
+     549/    5EBE : 22 12 80            	LD	(V_12H),HL
+     550/    5EC1 : CD 1A 5F            	CALL	A_038
+     551/    5EC4 : 2A 1A 80            	LD	HL,(V_1AH)
+     552/    5EC7 : 22 38 80            	LD	(V_38H),HL
+     553/    5ECA : C3 F3 65            	JP	A_022
+     554/    5ECD : 2A 20 80            A_037:	LD	HL,(V_20H)
+     555/    5ED0 : EB                  	EX	DE,HL
+     556/    5ED1 : 21 24 00            	LD	HL,024H
+     557/    5ED4 : CD 1E 54            	CALL	C_8A03
+     558/    5ED7 : B3                  	OR	E
+     559/    5ED8 : C2 EF 5E            	JP	NZ,A_039
+     560/    5EDB : 2A 12 80            	LD	HL,(V_12H)
+     561/    5EDE : EB                  	EX	DE,HL
+     562/    5EDF : 21 02 00            	LD	HL,02H
+     563/    5EE2 : 19                  	ADD	HL,DE
+     564/    5EE3 : 22 12 80            	LD	(V_12H),HL
+     565/    5EE6 : 21 2D 54            	LD	HL,C_8B85
+     566/    5EE9 : 22 38 80            	LD	(V_38H),HL
+     567/    5EEC : C3 F0 65            	JP	A_036
+     568/    5EEF : 2A 20 80            A_039:	LD	HL,(V_20H)
+     569/    5EF2 : EB                  	EX	DE,HL
+     570/    5EF3 : 21 27 00            	LD	HL,027H
+     571/    5EF6 : CD 1E 54            	CALL	C_8A03
+     572/    5EF9 : B3                  	OR	E
+     573/    5EFA : C2 06 5F            	JP	NZ,A_040
+     574/    5EFD : 21 52 80            	LD	HL,V_52H
+     575/    5F00 : 22 38 80            	LD	(V_38H),HL
+     576/    5F03 : C3 2C 6F            	JP	A_041
+     577/    5F06 : 2A 20 80            A_040:	LD	HL,(V_20H)
+     578/    5F09 : EB                  	EX	DE,HL
+     579/    5F0A : 21 20 00            	LD	HL,020H
+     580/    5F0D : CD 1E 54            	CALL	C_8A03
+     581/    5F10 : B3                  	OR	E
+     582/    5F11 : C2 17 5F            	JP	NZ,A_042
+     583/    5F14 : C3 1E 61            	JP	A_043
+     584/    5F17 : C3 14 74            A_042:	JP	A_044
+     585/    5F1A : 21 00 00            A_038:	LD	HL,00H
+     586/    5F1D : 22 1A 80            	LD	(V_1AH),HL
+     587/    5F20 : D5                  	PUSH	DE
+     588/    5F21 : 21 00 00            	LD	HL,00H
+     589/    5F24 : EB                  	EX	DE,HL
+     590/    5F25 : 2A 12 80            	LD	HL,(V_12H)
+     591/    5F28 : 19                  	ADD	HL,DE
+     592/    5F29 : D1                  	POP	DE
+     593/    5F2A : 6E                  	LD	L,(HL)
+     594/    5F2B : 26 00               	LD	H,00H
+     595/    5F2D : EB                  	EX	DE,HL
+     596/    5F2E : 21 24 00            	LD	HL,024H
+     597/    5F31 : CD 1E 54            	CALL	C_8A03
+     598/    5F34 : B3                  	OR	E
+     599/    5F35 : C2 46 5F            	JP	NZ,A_045
+     600/    5F38 : 2A 12 80            	LD	HL,(V_12H)
+     601/    5F3B : EB                  	EX	DE,HL
+     602/    5F3C : 21 01 00            	LD	HL,01H
+     603/    5F3F : 19                  	ADD	HL,DE
+     604/    5F40 : 22 12 80            	LD	(V_12H),HL
+     605/    5F43 : C3 AF 5F            	JP	A_046
+     606/    5F46 : D5                  A_045:	PUSH	DE
+     607/    5F47 : 21 00 00            	LD	HL,00H
+     608/    5F4A : EB                  	EX	DE,HL
+     609/    5F4B : 2A 12 80            	LD	HL,(V_12H)
+     610/    5F4E : 19                  	ADD	HL,DE
+     611/    5F4F : D1                  	POP	DE
+     612/    5F50 : 6E                  	LD	L,(HL)
+     613/    5F51 : 26 00               	LD	H,00H
+     614/    5F53 : EB                  	EX	DE,HL
+     615/    5F54 : 21 30 00            	LD	HL,030H
+     616/    5F57 : CD 1E 54            	CALL	C_8A03
+     617/    5F5A : EB                  	EX	DE,HL
+     618/    5F5B : 22 0E 80            	LD	(V_0EH),HL
+     619/    5F5E : D5                  	PUSH	DE
+     620/    5F5F : 2A 0E 80            	LD	HL,(V_0EH)
+     621/    5F62 : EB                  	EX	DE,HL
+     622/    5F63 : 21 00 00            	LD	HL,00H
+     623/    5F66 : CD 1E 54            	CALL	C_8A03
+     624/    5F69 : 11 00 00            	LD	DE,00H
+     625/    5F6C : F2 70 5F            	JP	P,A_047
+     626/    5F6F : 1C                  	INC	E
+     627/    5F70 : EB                  A_047:	EX	DE,HL
+     628/    5F71 : D1                  	POP	DE
+     629/    5F72 : EB                  	EX	DE,HL
+     630/    5F73 : D5                  	PUSH	DE
+     631/    5F74 : 2A 0E 80            	LD	HL,(V_0EH)
+     632/    5F77 : EB                  	EX	DE,HL
+     633/    5F78 : 21 09 00            	LD	HL,09H
+     634/    5F7B : EB                  	EX	DE,HL
+     635/    5F7C : CD 1E 54            	CALL	C_8A03
+     636/    5F7F : 11 00 00            	LD	DE,00H
+     637/    5F82 : F2 86 5F            	JP	P,A_048
+     638/    5F85 : 1C                  	INC	E
+     639/    5F86 : EB                  A_048:	EX	DE,HL
+     640/    5F87 : D1                  	POP	DE
+     641/    5F88 : 19                  	ADD	HL,DE
+     642/    5F89 : EB                  	EX	DE,HL
+     643/    5F8A : 7B                  	LD	A,E
+     644/    5F8B : B2                  	OR	D
+     645/    5F8C : CA 90 5F            	JP	Z,A_049
+     646/    5F8F : C9                  	RET
+     647/    5F90 : 2A 1A 80            A_049:	LD	HL,(V_1AH)
+     648/    5F93 : EB                  	EX	DE,HL
+     649/    5F94 : 21 0A 00            	LD	HL,0AH
+     650/    5F97 : CD 21 54            	CALL	C_8A0F
+     651/    5F9A : 2A 0E 80            	LD	HL,(V_0EH)
+     652/    5F9D : 19                  	ADD	HL,DE
+     653/    5F9E : 22 1A 80            	LD	(V_1AH),HL
+     654/    5FA1 : 2A 12 80            	LD	HL,(V_12H)
+     655/    5FA4 : EB                  	EX	DE,HL
+     656/    5FA5 : 21 01 00            	LD	HL,01H
+     657/    5FA8 : 19                  	ADD	HL,DE
+     658/    5FA9 : 22 12 80            	LD	(V_12H),HL
+     659/    5FAC : C3 46 5F            	JP	A_045
+     660/    5FAF : D5                  A_046:	PUSH	DE
+     661/    5FB0 : 21 00 00            	LD	HL,00H
+     662/    5FB3 : EB                  	EX	DE,HL
+     663/    5FB4 : 2A 12 80            	LD	HL,(V_12H)
+     664/    5FB7 : 19                  	ADD	HL,DE
+     665/    5FB8 : D1                  	POP	DE
+     666/    5FB9 : 6E                  	LD	L,(HL)
+     667/    5FBA : 26 00               	LD	H,00H
+     668/    5FBC : EB                  	EX	DE,HL
+     669/    5FBD : D5                  	PUSH	DE
+     670/    5FBE : 21 30 00            	LD	HL,030H
+     671/    5FC1 : EB                  	EX	DE,HL
+     672/    5FC2 : D5                  	PUSH	DE
+     673/    5FC3 : D5                  	PUSH	DE
+     674/    5FC4 : 21 00 00            	LD	HL,00H
+     675/    5FC7 : EB                  	EX	DE,HL
+     676/    5FC8 : 2A 12 80            	LD	HL,(V_12H)
+     677/    5FCB : 19                  	ADD	HL,DE
+     678/    5FCC : D1                  	POP	DE
+     679/    5FCD : 6E                  	LD	L,(HL)
+     680/    5FCE : 26 00               	LD	H,00H
+     681/    5FD0 : EB                  	EX	DE,HL
+     682/    5FD1 : 21 41 00            	LD	HL,041H
+     683/    5FD4 : CD 1E 54            	CALL	C_8A03
+     684/    5FD7 : 11 00 00            	LD	DE,00H
+     685/    5FDA : F2 DE 5F            	JP	P,A_050
+     686/    5FDD : 1C                  	INC	E
+     687/    5FDE : EB                  A_050:	EX	DE,HL
+     688/    5FDF : D1                  	POP	DE
+     689/    5FE0 : CD 21 54            	CALL	C_8A0F
+     690/    5FE3 : EB                  	EX	DE,HL
+     691/    5FE4 : D1                  	POP	DE
+     692/    5FE5 : CD 1E 54            	CALL	C_8A03
+     693/    5FE8 : D5                  	PUSH	DE
+     694/    5FE9 : 21 37 00            	LD	HL,037H
+     695/    5FEC : EB                  	EX	DE,HL
+     696/    5FED : D5                  	PUSH	DE
+     697/    5FEE : D5                  	PUSH	DE
+     698/    5FEF : 21 00 00            	LD	HL,00H
+     699/    5FF2 : EB                  	EX	DE,HL
+     700/    5FF3 : 2A 12 80            	LD	HL,(V_12H)
+     701/    5FF6 : 19                  	ADD	HL,DE
+     702/    5FF7 : D1                  	POP	DE
+     703/    5FF8 : 6E                  	LD	L,(HL)
+     704/    5FF9 : 26 00               	LD	H,00H
+     705/    5FFB : EB                  	EX	DE,HL
+     706/    5FFC : 21 39 00            	LD	HL,039H
+     707/    5FFF : EB                  	EX	DE,HL
+     708/    6000 : CD 1E 54            	CALL	C_8A03
+     709/    6003 : 11 00 00            	LD	DE,00H
+     710/    6006 : F2 0A 60            	JP	P,A_051
+     711/    6009 : 1C                  	INC	E
+     712/    600A : EB                  A_051:	EX	DE,HL
+     713/    600B : D1                  	POP	DE
+     714/    600C : CD 21 54            	CALL	C_8A0F
+     715/    600F : EB                  	EX	DE,HL
+     716/    6010 : D1                  	POP	DE
+     717/    6011 : CD 1E 54            	CALL	C_8A03
+     718/    6014 : EB                  	EX	DE,HL
+     719/    6015 : 22 0E 80            	LD	(V_0EH),HL
+     720/    6018 : D5                  	PUSH	DE
+     721/    6019 : 2A 0E 80            	LD	HL,(V_0EH)
+     722/    601C : EB                  	EX	DE,HL
+     723/    601D : 21 00 00            	LD	HL,00H
+     724/    6020 : CD 1E 54            	CALL	C_8A03
+     725/    6023 : 11 00 00            	LD	DE,00H
+     726/    6026 : F2 2A 60            	JP	P,A_052
+     727/    6029 : 1C                  	INC	E
+     728/    602A : EB                  A_052:	EX	DE,HL
+     729/    602B : D1                  	POP	DE
+     730/    602C : EB                  	EX	DE,HL
+     731/    602D : D5                  	PUSH	DE
+     732/    602E : 2A 0E 80            	LD	HL,(V_0EH)
+     733/    6031 : EB                  	EX	DE,HL
+     734/    6032 : 21 0F 00            	LD	HL,0FH
+     735/    6035 : EB                  	EX	DE,HL
+     736/    6036 : CD 1E 54            	CALL	C_8A03
+     737/    6039 : 11 00 00            	LD	DE,00H
+     738/    603C : F2 40 60            	JP	P,A_053
+     739/    603F : 1C                  	INC	E
+     740/    6040 : EB                  A_053:	EX	DE,HL
+     741/    6041 : D1                  	POP	DE
+     742/    6042 : 19                  	ADD	HL,DE
+     743/    6043 : EB                  	EX	DE,HL
+     744/    6044 : 7B                  	LD	A,E
+     745/    6045 : B2                  	OR	D
+     746/    6046 : CA 4C 60            	JP	Z,A_054
+     747/    6049 : C3 6B 60            	JP	A_055
+     748/    604C : 2A 1A 80            A_054:	LD	HL,(V_1AH)
+     749/    604F : EB                  	EX	DE,HL
+     750/    6050 : 21 10 00            	LD	HL,010H
+     751/    6053 : CD 21 54            	CALL	C_8A0F
+     752/    6056 : 2A 0E 80            	LD	HL,(V_0EH)
+     753/    6059 : 19                  	ADD	HL,DE
+     754/    605A : 22 1A 80            	LD	(V_1AH),HL
+     755/    605D : 2A 12 80            	LD	HL,(V_12H)
+     756/    6060 : EB                  	EX	DE,HL
+     757/    6061 : 21 01 00            	LD	HL,01H
+     758/    6064 : 19                  	ADD	HL,DE
+     759/    6065 : 22 12 80            	LD	(V_12H),HL
+     760/    6068 : C3 AF 5F            	JP	A_046
+     761/    606B : D5                  A_055:	PUSH	DE
+     762/    606C : D5                  	PUSH	DE
+     763/    606D : 21 01 00            	LD	HL,01H
+     764/    6070 : EB                  	EX	DE,HL
+     765/    6071 : CD 27 54            	CALL	C_8A5B
+     766/    6074 : EB                  	EX	DE,HL
+     767/    6075 : D1                  	POP	DE
+     768/    6076 : EB                  	EX	DE,HL
+     769/    6077 : 2A 12 80            	LD	HL,(V_12H)
+     770/    607A : 19                  	ADD	HL,DE
+     771/    607B : D1                  	POP	DE
+     772/    607C : 6E                  	LD	L,(HL)
+     773/    607D : 26 00               	LD	H,00H
+     774/    607F : EB                  	EX	DE,HL
+     775/    6080 : 21 24 00            	LD	HL,024H
+     776/    6083 : CD 1E 54            	CALL	C_8A03
+     777/    6086 : B3                  	OR	E
+     778/    6087 : CA 8B 60            	JP	Z,A_056
+     779/    608A : C9                  	RET
+     780/    608B : C3 86 6D            A_056:	JP	A_057
+     781/    608E : 21 00 00            A_131:	LD	HL,00H
+     782/    6091 : EB                  	EX	DE,HL
+     783/    6092 : 2A 06 80            	LD	HL,(V_06H)
+     784/    6095 : 19                  	ADD	HL,DE
+     785/    6096 : E5                  	PUSH	HL
+     786/    6097 : 21 D5 00            	LD	HL,0D5H
+     787/    609A : EB                  	EX	DE,HL
+     788/    609B : E1                  	POP	HL
+     789/    609C : 73                  	LD	(HL),E
+     790/    609D : 2A 06 80            	LD	HL,(V_06H)
+     791/    60A0 : EB                  	EX	DE,HL
+     792/    60A1 : 21 01 00            	LD	HL,01H
+     793/    60A4 : 19                  	ADD	HL,DE
+     794/    60A5 : 22 06 80            	LD	(V_06H),HL
+     795/    60A8 : D5                  	PUSH	DE
+     796/    60A9 : D5                  	PUSH	DE
+     797/    60AA : 21 02 00            	LD	HL,02H
+     798/    60AD : EB                  	EX	DE,HL
+     799/    60AE : CD 27 54            	CALL	C_8A5B
+     800/    60B1 : EB                  	EX	DE,HL
+     801/    60B2 : D1                  	POP	DE
+     802/    60B3 : EB                  	EX	DE,HL
+     803/    60B4 : 2A 06 80            	LD	HL,(V_06H)
+     804/    60B7 : 19                  	ADD	HL,DE
+     805/    60B8 : D1                  	POP	DE
+     806/    60B9 : 6E                  	LD	L,(HL)
+     807/    60BA : 26 00               	LD	H,00H
+     808/    60BC : EB                  	EX	DE,HL
+     809/    60BD : 21 D1 00            	LD	HL,0D1H
+     810/    60C0 : CD 1E 54            	CALL	C_8A03
+     811/    60C3 : B3                  	OR	E
+     812/    60C4 : C2 D5 60            	JP	NZ,A_058
+     813/    60C7 : 2A 06 80            	LD	HL,(V_06H)
+     814/    60CA : EB                  	EX	DE,HL
+     815/    60CB : 21 02 00            	LD	HL,02H
+     816/    60CE : CD 1E 54            	CALL	C_8A03
+     817/    60D1 : EB                  	EX	DE,HL
+     818/    60D2 : 22 06 80            	LD	(V_06H),HL
+     819/    60D5 : C9                  A_058:	RET
+     820/    60D6 : 21 00 00            A_090:	LD	HL,00H
+     821/    60D9 : EB                  	EX	DE,HL
+     822/    60DA : 2A 06 80            	LD	HL,(V_06H)
+     823/    60DD : 19                  	ADD	HL,DE
+     824/    60DE : E5                  	PUSH	HL
+     825/    60DF : 21 EB 00            	LD	HL,0EBH
+     826/    60E2 : EB                  	EX	DE,HL
+     827/    60E3 : E1                  	POP	HL
+     828/    60E4 : 73                  	LD	(HL),E
+     829/    60E5 : 2A 06 80            	LD	HL,(V_06H)
+     830/    60E8 : EB                  	EX	DE,HL
+     831/    60E9 : 21 01 00            	LD	HL,01H
+     832/    60EC : 19                  	ADD	HL,DE
+     833/    60ED : 22 06 80            	LD	(V_06H),HL
+     834/    60F0 : D5                  	PUSH	DE
+     835/    60F1 : D5                  	PUSH	DE
+     836/    60F2 : 21 02 00            	LD	HL,02H
+     837/    60F5 : EB                  	EX	DE,HL
+     838/    60F6 : CD 27 54            	CALL	C_8A5B
+     839/    60F9 : EB                  	EX	DE,HL
+     840/    60FA : D1                  	POP	DE
+     841/    60FB : EB                  	EX	DE,HL
+     842/    60FC : 2A 06 80            	LD	HL,(V_06H)
+     843/    60FF : 19                  	ADD	HL,DE
+     844/    6100 : D1                  	POP	DE
+     845/    6101 : 6E                  	LD	L,(HL)
+     846/    6102 : 26 00               	LD	H,00H
+     847/    6104 : EB                  	EX	DE,HL
+     848/    6105 : 21 EB 00            	LD	HL,0EBH
+     849/    6108 : CD 1E 54            	CALL	C_8A03
+     850/    610B : B3                  	OR	E
+     851/    610C : C2 1D 61            	JP	NZ,A_059
+     852/    610F : 2A 06 80            	LD	HL,(V_06H)
+     853/    6112 : EB                  	EX	DE,HL
+     854/    6113 : 21 02 00            	LD	HL,02H
+     855/    6116 : CD 1E 54            	CALL	C_8A03
+     856/    6119 : EB                  	EX	DE,HL
+     857/    611A : 22 06 80            	LD	(V_06H),HL
+     858/    611D : C9                  A_059:	RET
+     859/    611E : D5                  A_043:	PUSH	DE
+     860/    611F : 21 00 00            	LD	HL,00H
+     861/    6122 : EB                  	EX	DE,HL
+     862/    6123 : 2A 12 80            	LD	HL,(V_12H)
+     863/    6126 : 19                  	ADD	HL,DE
+     864/    6127 : D1                  	POP	DE
+     865/    6128 : 6E                  	LD	L,(HL)
+     866/    6129 : 26 00               	LD	H,00H
+     867/    612B : EB                  	EX	DE,HL
+     868/    612C : 21 00 00            	LD	HL,00H
+     869/    612F : CD 1E 54            	CALL	C_8A03
+     870/    6132 : B3                  	OR	E
+     871/    6133 : C2 44 61            	JP	NZ,A_060
+     872/    6136 : 2A 12 80            	LD	HL,(V_12H)
+     873/    6139 : EB                  	EX	DE,HL
+     874/    613A : 21 01 00            	LD	HL,01H
+     875/    613D : 19                  	ADD	HL,DE
+     876/    613E : 22 12 80            	LD	(V_12H),HL
+     877/    6141 : C3 57 5C            	JP	A_061
+     878/    6144 : D5                  A_060:	PUSH	DE
+     879/    6145 : 21 00 00            	LD	HL,00H
+     880/    6148 : EB                  	EX	DE,HL
+     881/    6149 : 2A 12 80            	LD	HL,(V_12H)
+     882/    614C : 19                  	ADD	HL,DE
+     883/    614D : D1                  	POP	DE
+     884/    614E : 6E                  	LD	L,(HL)
+     885/    614F : 26 00               	LD	H,00H
+     886/    6151 : EB                  	EX	DE,HL
+     887/    6152 : 21 20 00            	LD	HL,020H
+     888/    6155 : CD 1E 54            	CALL	C_8A03
+     889/    6158 : B3                  	OR	E
+     890/    6159 : C2 6A 61            	JP	NZ,A_062
+     891/    615C : 2A 12 80            	LD	HL,(V_12H)
+     892/    615F : EB                  	EX	DE,HL
+     893/    6160 : 21 01 00            	LD	HL,01H
+     894/    6163 : 19                  	ADD	HL,DE
+     895/    6164 : 22 12 80            	LD	(V_12H),HL
+     896/    6167 : C3 1E 61            	JP	A_043
+     897/    616A : C3 9C 5D            A_062:	JP	A_014
+     898/    616D : D5                  A_015:	PUSH	DE
+     899/    616E : D5                  	PUSH	DE
+     900/    616F : 21 01 00            	LD	HL,01H
+     901/    6172 : EB                  	EX	DE,HL
+     902/    6173 : CD 27 54            	CALL	C_8A5B
+     903/    6176 : EB                  	EX	DE,HL
+     904/    6177 : D1                  	POP	DE
+     905/    6178 : EB                  	EX	DE,HL
+     906/    6179 : 2A 12 80            	LD	HL,(V_12H)
+     907/    617C : 19                  	ADD	HL,DE
+     908/    617D : D1                  	POP	DE
+     909/    617E : 6E                  	LD	L,(HL)
+     910/    617F : 26 00               	LD	H,00H
+     911/    6181 : EB                  	EX	DE,HL
+     912/    6182 : 21 00 00            	LD	HL,00H
+     913/    6185 : EB                  	EX	DE,HL
+     914/    6186 : CD 1E 54            	CALL	C_8A03
+     915/    6189 : F2 9A 61            	JP	P,A_063
+     916/    618C : 2A 12 80            	LD	HL,(V_12H)
+     917/    618F : EB                  	EX	DE,HL
+     918/    6190 : 21 01 00            	LD	HL,01H
+     919/    6193 : 19                  	ADD	HL,DE
+     920/    6194 : 22 12 80            	LD	(V_12H),HL
+     921/    6197 : C3 6D 61            	JP	A_015
+     922/    619A : C3 57 5C            A_063:	JP	A_061
+     923/    619D : D5                  A_017:	PUSH	DE
+     924/    619E : 21 01 00            	LD	HL,01H
+     925/    61A1 : EB                  	EX	DE,HL
+     926/    61A2 : 2A 12 80            	LD	HL,(V_12H)
+     927/    61A5 : 19                  	ADD	HL,DE
+     928/    61A6 : D1                  	POP	DE
+     929/    61A7 : 6E                  	LD	L,(HL)
+     930/    61A8 : 26 00               	LD	H,00H
+     931/    61AA : EB                  	EX	DE,HL
+     932/    61AB : 21 3D 00            	LD	HL,03DH
+     933/    61AE : CD 1E 54            	CALL	C_8A03
+     934/    61B1 : B3                  	OR	E
+     935/    61B2 : CA B8 61            	JP	Z,A_064
+     936/    61B5 : C3 F1 61            	JP	A_065
+     937/    61B8 : 2A 12 80            A_064:	LD	HL,(V_12H)
+     938/    61BB : EB                  	EX	DE,HL
+     939/    61BC : 21 02 00            	LD	HL,02H
+     940/    61BF : 19                  	ADD	HL,DE
+     941/    61C0 : 22 12 80            	LD	(V_12H),HL
+     942/    61C3 : CD 70 62            	CALL	A_066
+     943/    61C6 : C3 1E 61            	JP	A_043
+     944/    61C9 : 2A 12 80            A_020:	LD	HL,(V_12H)
+     945/    61CC : EB                  	EX	DE,HL
+     946/    61CD : 21 01 00            	LD	HL,01H
+     947/    61D0 : 19                  	ADD	HL,DE
+     948/    61D1 : 22 12 80            	LD	(V_12H),HL
+     949/    61D4 : 21 00 00            	LD	HL,00H
+     950/    61D7 : EB                  	EX	DE,HL
+     951/    61D8 : 2A 06 80            	LD	HL,(V_06H)
+     952/    61DB : 19                  	ADD	HL,DE
+     953/    61DC : E5                  	PUSH	HL
+     954/    61DD : 21 C9 00            	LD	HL,0C9H
+     955/    61E0 : EB                  	EX	DE,HL
+     956/    61E1 : E1                  	POP	HL
+     957/    61E2 : 73                  	LD	(HL),E
+     958/    61E3 : 2A 06 80            	LD	HL,(V_06H)
+     959/    61E6 : EB                  	EX	DE,HL
+     960/    61E7 : 21 01 00            	LD	HL,01H
+     961/    61EA : 19                  	ADD	HL,DE
+     962/    61EB : 22 06 80            	LD	(V_06H),HL
+     963/    61EE : C3 1E 61            	JP	A_043
+     964/    61F1 : 2A 12 80            A_065:	LD	HL,(V_12H)
+     965/    61F4 : EB                  	EX	DE,HL
+     966/    61F5 : 21 01 00            	LD	HL,01H
+     967/    61F8 : 19                  	ADD	HL,DE
+     968/    61F9 : 22 12 80            	LD	(V_12H),HL
+     969/    61FC : CD 4B 69            	CALL	A_067
+     970/    61FF : 21 00 00            	LD	HL,00H
+     971/    6202 : EB                  	EX	DE,HL
+     972/    6203 : 2A 06 80            	LD	HL,(V_06H)
+     973/    6206 : 19                  	ADD	HL,DE
+     974/    6207 : E5                  	PUSH	HL
+     975/    6208 : 21 7D 00            	LD	HL,07DH
+     976/    620B : EB                  	EX	DE,HL
+     977/    620C : E1                  	POP	HL
+     978/    620D : 73                  	LD	(HL),E
+     979/    620E : 2A 06 80            	LD	HL,(V_06H)
+     980/    6211 : EB                  	EX	DE,HL
+     981/    6212 : 21 01 00            	LD	HL,01H
+     982/    6215 : 19                  	ADD	HL,DE
+     983/    6216 : 22 06 80            	LD	(V_06H),HL
+     984/    6219 : 2A 12 80            	LD	HL,(V_12H)
+     985/    621C : EB                  	EX	DE,HL
+     986/    621D : 21 01 00            	LD	HL,01H
+     987/    6220 : 19                  	ADD	HL,DE
+     988/    6221 : 22 12 80            	LD	(V_12H),HL
+     989/    6224 : 21 CA 00            	LD	HL,0CAH
+     990/    6227 : 22 26 80            	LD	(V_26H),HL
+     991/    622A : 21 00 00            A_069:	LD	HL,00H
+     992/    622D : EB                  	EX	DE,HL
+     993/    622E : 2A 06 80            	LD	HL,(V_06H)
+     994/    6231 : 19                  	ADD	HL,DE
+     995/    6232 : E5                  	PUSH	HL
+     996/    6233 : 21 3D 00            	LD	HL,03DH
+     997/    6236 : EB                  	EX	DE,HL
+     998/    6237 : E1                  	POP	HL
+     999/    6238 : 73                  	LD	(HL),E
+    1000/    6239 : 2A 06 80            	LD	HL,(V_06H)
+    1001/    623C : EB                  	EX	DE,HL
+    1002/    623D : 21 01 00            	LD	HL,01H
+    1003/    6240 : 19                  	ADD	HL,DE
+    1004/    6241 : 22 06 80            	LD	(V_06H),HL
+    1005/    6244 : CD 70 62            	CALL	A_066
+    1006/    6247 : D5                  	PUSH	DE
+    1007/    6248 : 21 00 00            	LD	HL,00H
+    1008/    624B : EB                  	EX	DE,HL
+    1009/    624C : 2A 12 80            	LD	HL,(V_12H)
+    1010/    624F : 19                  	ADD	HL,DE
+    1011/    6250 : D1                  	POP	DE
+    1012/    6251 : 6E                  	LD	L,(HL)
+    1013/    6252 : 26 00               	LD	H,00H
+    1014/    6254 : EB                  	EX	DE,HL
+    1015/    6255 : 21 2C 00            	LD	HL,02CH
+    1016/    6258 : CD 1E 54            	CALL	C_8A03
+    1017/    625B : B3                  	OR	E
+    1018/    625C : C2 6D 62            	JP	NZ,A_068
+    1019/    625F : 2A 12 80            	LD	HL,(V_12H)
+    1020/    6262 : EB                  	EX	DE,HL
+    1021/    6263 : 21 01 00            	LD	HL,01H
+    1022/    6266 : 19                  	ADD	HL,DE
+    1023/    6267 : 22 12 80            	LD	(V_12H),HL
+    1024/    626A : C3 2A 62            	JP	A_069
+    1025/    626D : C3 1E 61            A_068:	JP	A_043
+    1026/    6270 : D5                  A_066:	PUSH	DE
+    1027/    6271 : 21 00 00            	LD	HL,00H
+    1028/    6274 : EB                  	EX	DE,HL
+    1029/    6275 : 2A 12 80            	LD	HL,(V_12H)
+    1030/    6278 : 19                  	ADD	HL,DE
+    1031/    6279 : D1                  	POP	DE
+    1032/    627A : 6E                  	LD	L,(HL)
+    1033/    627B : 26 00               	LD	H,00H
+    1034/    627D : EB                  	EX	DE,HL
+    1035/    627E : 21 2D 00            	LD	HL,02DH
+    1036/    6281 : CD 1E 54            	CALL	C_8A03
+    1037/    6284 : B3                  	OR	E
+    1038/    6285 : C2 9F 62            	JP	NZ,A_070
+    1039/    6288 : 2A 12 80            	LD	HL,(V_12H)
+    1040/    628B : EB                  	EX	DE,HL
+    1041/    628C : 21 01 00            	LD	HL,01H
+    1042/    628F : 19                  	ADD	HL,DE
+    1043/    6290 : 22 12 80            	LD	(V_12H),HL
+    1044/    6293 : CD 1A 5F            	CALL	A_038
+    1045/    6296 : 21 FF 7F            	LD	HL,07FFFH
+    1046/    6299 : 22 1A 80            	LD	(V_1AH),HL
+    1047/    629C : C3 A2 62            	JP	A_071
+    1048/    629F : CD 1A 5F            A_070:	CALL	A_038
+    1049/    62A2 : 21 00 00            A_071:	LD	HL,00H
+    1050/    62A5 : EB                  	EX	DE,HL
+    1051/    62A6 : 2A 06 80            	LD	HL,(V_06H)
+    1052/    62A9 : 19                  	ADD	HL,DE
+    1053/    62AA : E5                  	PUSH	HL
+    1054/    62AB : 2A 26 80            	LD	HL,(V_26H)
+    1055/    62AE : EB                  	EX	DE,HL
+    1056/    62AF : E1                  	POP	HL
+    1057/    62B0 : 73                  	LD	(HL),E
+    1058/    62B1 : 2A 06 80            	LD	HL,(V_06H)
+    1059/    62B4 : EB                  	EX	DE,HL
+    1060/    62B5 : 21 03 00            	LD	HL,03H
+    1061/    62B8 : 19                  	ADD	HL,DE
+    1062/    62B9 : 22 06 80            	LD	(V_06H),HL
+    1063/    62BC : 2A 24 80            	LD	HL,(V_24H)
+    1064/    62BF : EB                  	EX	DE,HL
+    1065/    62C0 : 21 01 00            	LD	HL,01H
+    1066/    62C3 : CD 1E 54            	CALL	C_8A03
+    1067/    62C6 : B3                  	OR	E
+    1068/    62C7 : C2 CB 62            	JP	NZ,A_072
+    1069/    62CA : C9                  	RET
+    1070/    62CB :                     
+    1071/    62CB : D5                  A_072:	PUSH	DE
+    1072/    62CC : 21 02 00            	LD	HL,02H
+    1073/    62CF : EB                  	EX	DE,HL
+    1074/    62D0 : CD 27 54            	CALL	C_8A5B
+    1075/    62D3 : EB                  	EX	DE,HL
+    1076/    62D4 : D1                  	POP	DE
+    1077/    62D5 : 22 18 80            	LD	(V_18H),HL
+    1078/    62D8 : 11 00 00            	LD	DE,00H
+    1079/    62DB : CD DE 62            	CALL	A_073
+    1080/    62DE : D5                  A_073:	PUSH	DE
+    1081/    62DF : 2A 18 80            	LD	HL,(V_18H)
+    1082/    62E2 : EB                  	EX	DE,HL
+    1083/    62E3 : 21 02 00            	LD	HL,02H
+    1084/    62E6 : 19                  	ADD	HL,DE
+    1085/    62E7 : 22 18 80            	LD	(V_18H),HL
+    1086/    62EA : D5                  	PUSH	DE
+    1087/    62EB : D5                  	PUSH	DE
+    1088/    62EC : 2A 18 80            	LD	HL,(V_18H)
+    1089/    62EF : EB                  	EX	DE,HL
+    1090/    62F0 : 2A 1C 80            	LD	HL,(V_1CH)
+    1091/    62F3 : 19                  	ADD	HL,DE
+    1092/    62F4 : 19                  	ADD	HL,DE
+    1093/    62F5 : D1                  	POP	DE
+    1094/    62F6 : 7E                  	LD	A,(HL)
+    1095/    62F7 : 23                  	INC	HL
+    1096/    62F8 : 66                  	LD	H,(HL)
+    1097/    62F9 : 6F                  	LD	L,A
+    1098/    62FA : EB                  	EX	DE,HL
+    1099/    62FB : 2A 1A 80            	LD	HL,(V_1AH)
+    1100/    62FE : CD 1E 54            	CALL	C_8A03
+    1101/    6301 : 11 00 00            	LD	DE,00H
+    1102/    6304 : FA 08 63            	JP	M,A_074
+    1103/    6307 : 1C                  	INC	E
+    1104/    6308 : EB                  A_074:	EX	DE,HL
+    1105/    6309 : D1                  	POP	DE
+    1106/    630A : D1                  	POP	DE
+    1107/    630B : D5                  	PUSH	DE
+    1108/    630C : CD 1E 54            	CALL	C_8A03
+    1109/    630F : D1                  	POP	DE
+    1110/    6310 : E1                  	POP	HL
+    1111/    6311 : FA 16 63            	JP	M,A_076
+    1112/    6314 : E5                  	PUSH	HL
+    1113/    6315 : E9                  	JP	(HL)
+    1114/    6316 :                     
+    1115/    6316 : 21 8A 74            A_076:	LD	HL,STR_11
+    1116/    6319 : CD 0F 54            	CALL	C_8785
+    1117/    631C :                     
+    1118/    631C : D5                  	PUSH	DE
+    1119/    631D : 2A 18 80            	LD	HL,(V_18H)
+    1120/    6320 : EB                  	EX	DE,HL
+    1121/    6321 : 21 01 00            	LD	HL,01H
+    1122/    6324 : 19                  	ADD	HL,DE
+    1123/    6325 : EB                  	EX	DE,HL
+    1124/    6326 : 2A 1C 80            	LD	HL,(V_1CH)
+    1125/    6329 : 19                  	ADD	HL,DE
+    1126/    632A : 19                  	ADD	HL,DE
+    1127/    632B : D1                  	POP	DE
+    1128/    632C : 7E                  	LD	A,(HL)
+    1129/    632D : 23                  	INC	HL
+    1130/    632E : 66                  	LD	H,(HL)
+    1131/    632F : 6F                  	LD	L,A
+    1132/    6330 : EB                  	EX	DE,HL
+    1133/    6331 : D5                  	PUSH	DE
+    1134/    6332 : 42                  	LD	B,D
+    1135/    6333 : CD 39 54            	CALL	C_8C32
+    1136/    6336 : D1                  	POP	DE
+    1137/    6337 : CD 36 54            	CALL	C_8C31
+    1138/    633A : D5                  	PUSH	DE
+    1139/    633B : 21 01 00            	LD	HL,01H
+    1140/    633E : EB                  	EX	DE,HL
+    1141/    633F : CD 27 54            	CALL	C_8A5B
+    1142/    6342 : EB                  	EX	DE,HL
+    1143/    6343 : D1                  	POP	DE
+    1144/    6344 : EB                  	EX	DE,HL
+    1145/    6345 : 2A 06 80            	LD	HL,(V_06H)
+    1146/    6348 : 19                  	ADD	HL,DE
+    1147/    6349 : 19                  	ADD	HL,DE
+    1148/    634A : E5                  	PUSH	HL
+    1149/    634B : D5                  	PUSH	DE
+    1150/    634C : 2A 18 80            	LD	HL,(V_18H)
+    1151/    634F : EB                  	EX	DE,HL
+    1152/    6350 : 21 01 00            	LD	HL,01H
+    1153/    6353 : 19                  	ADD	HL,DE
+    1154/    6354 : EB                  	EX	DE,HL
+    1155/    6355 : 2A 1C 80            	LD	HL,(V_1CH)
+    1156/    6358 : 19                  	ADD	HL,DE
+    1157/    6359 : 19                  	ADD	HL,DE
+    1158/    635A : D1                  	POP	DE
+    1159/    635B : 7E                  	LD	A,(HL)
+    1160/    635C : 23                  	INC	HL
+    1161/    635D : 66                  	LD	H,(HL)
+    1162/    635E : 6F                  	LD	L,A
+    1163/    635F : EB                  	EX	DE,HL
+    1164/    6360 : E1                  	POP	HL
+    1165/    6361 : 73                  	LD	(HL),E
+    1166/    6362 : 23                  	INC	HL
+    1167/    6363 : 72                  	LD	(HL),D
+    1168/    6364 : C9                  	RET
+    1169/    6365 :                     
+    1170/    6365 : 21 00 00            A_024:	LD	HL,00H
+    1171/    6368 : EB                  	EX	DE,HL
+    1172/    6369 : 2A 06 80            	LD	HL,(V_06H)
+    1173/    636C : 19                  	ADD	HL,DE
+    1174/    636D : E5                  	PUSH	HL
+    1175/    636E : 21 C3 00            	LD	HL,0C3H
+    1176/    6371 : EB                  	EX	DE,HL
+    1177/    6372 : E1                  	POP	HL
+    1178/    6373 : 73                  	LD	(HL),E
+    1179/    6374 : 2A 06 80            	LD	HL,(V_06H)
+    1180/    6377 : EB                  	EX	DE,HL
+    1181/    6378 : 21 01 00            	LD	HL,01H
+    1182/    637B : 19                  	ADD	HL,DE
+    1183/    637C : 22 26 80            	LD	(V_26H),HL
+    1184/    637F : 2A 06 80            	LD	HL,(V_06H)
+    1185/    6382 : EB                  	EX	DE,HL
+    1186/    6383 : 21 02 00            	LD	HL,02H
+    1187/    6386 : 19                  	ADD	HL,DE
+    1188/    6387 : 22 06 80            	LD	(V_06H),HL
+    1189/    638A : 11 00 00            	LD	DE,00H
+    1190/    638D : CD 90 63            	CALL	A_079
+    1191/    6390 : D5                  A_079:	PUSH	DE
+    1192/    6391 : 2A 12 80            	LD	HL,(V_12H)
+    1193/    6394 : EB                  	EX	DE,HL
+    1194/    6395 : 21 01 00            	LD	HL,01H
+    1195/    6398 : 19                  	ADD	HL,DE
+    1196/    6399 : 22 12 80            	LD	(V_12H),HL
+    1197/    639C : 2A 06 80            	LD	HL,(V_06H)
+    1198/    639F : EB                  	EX	DE,HL
+    1199/    63A0 : 21 01 00            	LD	HL,01H
+    1200/    63A3 : 19                  	ADD	HL,DE
+    1201/    63A4 : 22 06 80            	LD	(V_06H),HL
+    1202/    63A7 : 21 00 00            	LD	HL,00H
+    1203/    63AA : EB                  	EX	DE,HL
+    1204/    63AB : 2A 06 80            	LD	HL,(V_06H)
+    1205/    63AE : 19                  	ADD	HL,DE
+    1206/    63AF : E5                  	PUSH	HL
+    1207/    63B0 : D5                  	PUSH	DE
+    1208/    63B1 : 21 00 00            	LD	HL,00H
+    1209/    63B4 : EB                  	EX	DE,HL
+    1210/    63B5 : 2A 12 80            	LD	HL,(V_12H)
+    1211/    63B8 : 19                  	ADD	HL,DE
+    1212/    63B9 : D1                  	POP	DE
+    1213/    63BA : 6E                  	LD	L,(HL)
+    1214/    63BB : 26 00               	LD	H,00H
+    1215/    63BD : EB                  	EX	DE,HL
+    1216/    63BE : E1                  	POP	HL
+    1217/    63BF : 73                  	LD	(HL),E
+    1218/    63C0 : D5                  	PUSH	DE
+    1219/    63C1 : D5                  	PUSH	DE
+    1220/    63C2 : 21 00 00            	LD	HL,00H
+    1221/    63C5 : EB                  	EX	DE,HL
+    1222/    63C6 : 2A 12 80            	LD	HL,(V_12H)
+    1223/    63C9 : 19                  	ADD	HL,DE
+    1224/    63CA : D1                  	POP	DE
+    1225/    63CB : 6E                  	LD	L,(HL)
+    1226/    63CC : 26 00               	LD	H,00H
+    1227/    63CE : EB                  	EX	DE,HL
+    1228/    63CF : 21 22 00            	LD	HL,022H
+    1229/    63D2 : CD 1E 54            	CALL	C_8A03
+    1230/    63D5 : B3                  	OR	E
+    1231/    63D6 : 11 00 00            	LD	DE,00H
+    1232/    63D9 : C2 DD 63            	JP	NZ,A_080
+    1233/    63DC : 1C                  	INC	E
+    1234/    63DD : EB                  A_080:	EX	DE,HL
+    1235/    63DE : D1                  	POP	DE
+    1236/    63DF : D1                  	POP	DE
+    1237/    63E0 : D5                  	PUSH	DE
+    1238/    63E1 : CD 1E 54            	CALL	C_8A03
+    1239/    63E4 : D1                  	POP	DE
+    1240/    63E5 : E1                  	POP	HL
+    1241/    63E6 : FA EB 63            	JP	M,A_081
+    1242/    63E9 : E5                  	PUSH	HL
+    1243/    63EA : E9                  	JP	(HL)
+    1244/    63EB :                     
+    1245/    63EB : 2A 12 80            A_081:	LD	HL,(V_12H)
+    1246/    63EE : EB                  	EX	DE,HL
+    1247/    63EF : 21 01 00            	LD	HL,01H
+    1248/    63F2 : 19                  	ADD	HL,DE
+    1249/    63F3 : 22 12 80            	LD	(V_12H),HL
+    1250/    63F6 : 21 00 00            	LD	HL,00H
+    1251/    63F9 : EB                  	EX	DE,HL
+    1252/    63FA : 2A 06 80            	LD	HL,(V_06H)
+    1253/    63FD : 19                  	ADD	HL,DE
+    1254/    63FE : 19                  	ADD	HL,DE
+    1255/    63FF : E5                  	PUSH	HL
+    1256/    6400 : 21 00 21            	LD	HL,02100H
+    1257/    6403 : EB                  	EX	DE,HL
+    1258/    6404 : E1                  	POP	HL
+    1259/    6405 : 73                  	LD	(HL),E
+    1260/    6406 : 23                  	INC	HL
+    1261/    6407 : 72                  	LD	(HL),D
+    1262/    6408 : 21 01 00            	LD	HL,01H
+    1263/    640B : EB                  	EX	DE,HL
+    1264/    640C : 2A 06 80            	LD	HL,(V_06H)
+    1265/    640F : 19                  	ADD	HL,DE
+    1266/    6410 : 19                  	ADD	HL,DE
+    1267/    6411 : E5                  	PUSH	HL
+    1268/    6412 : 2A 26 80            	LD	HL,(V_26H)
+    1269/    6415 : EB                  	EX	DE,HL
+    1270/    6416 : 21 02 00            	LD	HL,02H
+    1271/    6419 : 19                  	ADD	HL,DE
+    1272/    641A : EB                  	EX	DE,HL
+    1273/    641B : E1                  	POP	HL
+    1274/    641C : 73                  	LD	(HL),E
+    1275/    641D : 23                  	INC	HL
+    1276/    641E : 72                  	LD	(HL),D
+    1277/    641F : 21 00 00            	LD	HL,00H
+    1278/    6422 : EB                  	EX	DE,HL
+    1279/    6423 : 2A 26 80            	LD	HL,(V_26H)
+    1280/    6426 : 19                  	ADD	HL,DE
+    1281/    6427 : 19                  	ADD	HL,DE
+    1282/    6428 : E5                  	PUSH	HL
+    1283/    6429 : 2A 06 80            	LD	HL,(V_06H)
+    1284/    642C : EB                  	EX	DE,HL
+    1285/    642D : 21 01 00            	LD	HL,01H
+    1286/    6430 : 19                  	ADD	HL,DE
+    1287/    6431 : EB                  	EX	DE,HL
+    1288/    6432 : E1                  	POP	HL
+    1289/    6433 : 73                  	LD	(HL),E
+    1290/    6434 : 23                  	INC	HL
+    1291/    6435 : 72                  	LD	(HL),D
+    1292/    6436 : 2A 06 80            	LD	HL,(V_06H)
+    1293/    6439 : EB                  	EX	DE,HL
+    1294/    643A : 21 07 00            	LD	HL,07H
+    1295/    643D : 19                  	ADD	HL,DE
+    1296/    643E : 22 06 80            	LD	(V_06H),HL
+    1297/    6441 : D5                  	PUSH	DE
+    1298/    6442 : 21 03 00            	LD	HL,03H
+    1299/    6445 : EB                  	EX	DE,HL
+    1300/    6446 : CD 27 54            	CALL	C_8A5B
+    1301/    6449 : EB                  	EX	DE,HL
+    1302/    644A : D1                  	POP	DE
+    1303/    644B : EB                  	EX	DE,HL
+    1304/    644C : 2A 06 80            	LD	HL,(V_06H)
+    1305/    644F : 19                  	ADD	HL,DE
+    1306/    6450 : E5                  	PUSH	HL
+    1307/    6451 : 21 CD 00            	LD	HL,0CDH
+    1308/    6454 : EB                  	EX	DE,HL
+    1309/    6455 : E1                  	POP	HL
+    1310/    6456 : 73                  	LD	(HL),E
+    1311/    6457 : D5                  	PUSH	DE
+    1312/    6458 : 21 01 00            	LD	HL,01H
+    1313/    645B : EB                  	EX	DE,HL
+    1314/    645C : CD 27 54            	CALL	C_8A5B
+    1315/    645F : EB                  	EX	DE,HL
+    1316/    6460 : D1                  	POP	DE
+    1317/    6461 : EB                  	EX	DE,HL
+    1318/    6462 : 2A 06 80            	LD	HL,(V_06H)
+    1319/    6465 : 19                  	ADD	HL,DE
+    1320/    6466 : 19                  	ADD	HL,DE
+    1321/    6467 : E5                  	PUSH	HL
+    1322/    6468 : 21 0F 54            	LD	HL,C_8785
+    1323/    646B : EB                  	EX	DE,HL
+    1324/    646C : E1                  	POP	HL
+    1325/    646D : 73                  	LD	(HL),E
+    1326/    646E : 23                  	INC	HL
+    1327/    646F : 72                  	LD	(HL),D
+    1328/    6470 : C3 1E 61            	JP	A_043
+    1329/    6473 :                     
+    1330/    6473 : D5                  A_026:	PUSH	DE
+    1331/    6474 : 21 01 00            	LD	HL,01H
+    1332/    6477 : EB                  	EX	DE,HL
+    1333/    6478 : 2A 12 80            	LD	HL,(V_12H)
+    1334/    647B : 19                  	ADD	HL,DE
+    1335/    647C : D1                  	POP	DE
+    1336/    647D : 6E                  	LD	L,(HL)
+    1337/    647E : 26 00               	LD	H,00H
+    1338/    6480 : EB                  	EX	DE,HL
+    1339/    6481 : 21 3D 00            	LD	HL,03DH
+    1340/    6484 : CD 1E 54            	CALL	C_8A03
+    1341/    6487 : B3                  	OR	E
+    1342/    6488 : CA 8E 64            	JP	Z,A_082
+    1343/    648B : C3 A2 64            	JP	A_083
+    1344/    648E : 2A 12 80            A_082:	LD	HL,(V_12H)
+    1345/    6491 : EB                  	EX	DE,HL
+    1346/    6492 : 21 02 00            	LD	HL,02H
+    1347/    6495 : 19                  	ADD	HL,DE
+    1348/    6496 : 22 12 80            	LD	(V_12H),HL
+    1349/    6499 : 21 33 54            	LD	HL,C_8C26
+    1350/    649C : 22 38 80            	LD	(V_38H),HL
+    1351/    649F : C3 F0 65            	JP	A_036
+    1352/    64A2 : D5                  A_083:	PUSH	DE
+    1353/    64A3 : 21 01 00            	LD	HL,01H
+    1354/    64A6 : EB                  	EX	DE,HL
+    1355/    64A7 : 2A 12 80            	LD	HL,(V_12H)
+    1356/    64AA : 19                  	ADD	HL,DE
+    1357/    64AB : D1                  	POP	DE
+    1358/    64AC : 6E                  	LD	L,(HL)
+    1359/    64AD : 26 00               	LD	H,00H
+    1360/    64AF : EB                  	EX	DE,HL
+    1361/    64B0 : 21 3F 00            	LD	HL,03FH
+    1362/    64B3 : CD 1E 54            	CALL	C_8A03
+    1363/    64B6 : B3                  	OR	E
+    1364/    64B7 : CA BD 64            	JP	Z,A_084
+    1365/    64BA : C3 33 65            	JP	A_085
+    1366/    64BD : 2A 12 80            A_084:	LD	HL,(V_12H)
+    1367/    64C0 : EB                  	EX	DE,HL
+    1368/    64C1 : 21 03 00            	LD	HL,03H
+    1369/    64C4 : 19                  	ADD	HL,DE
+    1370/    64C5 : 22 12 80            	LD	(V_12H),HL
+    1371/    64C8 : CD 68 66            	CALL	A_086
+    1372/    64CB : 21 00 00            	LD	HL,00H
+    1373/    64CE : EB                  	EX	DE,HL
+    1374/    64CF : 2A 06 80            	LD	HL,(V_06H)
+    1375/    64D2 : 19                  	ADD	HL,DE
+    1376/    64D3 : 19                  	ADD	HL,DE
+    1377/    64D4 : E5                  	PUSH	HL
+    1378/    64D5 : 21 D5 42            	LD	HL,042D5H
+    1379/    64D8 : EB                  	EX	DE,HL
+    1380/    64D9 : E1                  	POP	HL
+    1381/    64DA : 73                  	LD	(HL),E
+    1382/    64DB : 23                  	INC	HL
+    1383/    64DC : 72                  	LD	(HL),D
+    1384/    64DD : 21 02 00            	LD	HL,02H
+    1385/    64E0 : EB                  	EX	DE,HL
+    1386/    64E1 : 2A 06 80            	LD	HL,(V_06H)
+    1387/    64E4 : 19                  	ADD	HL,DE
+    1388/    64E5 : E5                  	PUSH	HL
+    1389/    64E6 : 21 CD 00            	LD	HL,0CDH
+    1390/    64E9 : EB                  	EX	DE,HL
+    1391/    64EA : E1                  	POP	HL
+    1392/    64EB : 73                  	LD	(HL),E
+    1393/    64EC : 2A 06 80            	LD	HL,(V_06H)
+    1394/    64EF : EB                  	EX	DE,HL
+    1395/    64F0 : 21 05 00            	LD	HL,05H
+    1396/    64F3 : 19                  	ADD	HL,DE
+    1397/    64F4 : 22 06 80            	LD	(V_06H),HL
+    1398/    64F7 : D5                  	PUSH	DE
+    1399/    64F8 : 21 01 00            	LD	HL,01H
+    1400/    64FB : EB                  	EX	DE,HL
+    1401/    64FC : CD 27 54            	CALL	C_8A5B
+    1402/    64FF : EB                  	EX	DE,HL
+    1403/    6500 : D1                  	POP	DE
+    1404/    6501 : EB                  	EX	DE,HL
+    1405/    6502 : 2A 06 80            	LD	HL,(V_06H)
+    1406/    6505 : 19                  	ADD	HL,DE
+    1407/    6506 : 19                  	ADD	HL,DE
+    1408/    6507 : E5                  	PUSH	HL
+    1409/    6508 : 21 39 54            	LD	HL,C_8C32
+    1410/    650B : EB                  	EX	DE,HL
+    1411/    650C : E1                  	POP	HL
+    1412/    650D : 73                  	LD	(HL),E
+    1413/    650E : 23                  	INC	HL
+    1414/    650F : 72                  	LD	(HL),D
+    1415/    6510 : 21 00 00            	LD	HL,00H
+    1416/    6513 : EB                  	EX	DE,HL
+    1417/    6514 : 2A 06 80            	LD	HL,(V_06H)
+    1418/    6517 : 19                  	ADD	HL,DE
+    1419/    6518 : E5                  	PUSH	HL
+    1420/    6519 : 21 D1 00            	LD	HL,0D1H
+    1421/    651C : EB                  	EX	DE,HL
+    1422/    651D : E1                  	POP	HL
+    1423/    651E : 73                  	LD	(HL),E
+    1424/    651F : 2A 06 80            	LD	HL,(V_06H)
+    1425/    6522 : EB                  	EX	DE,HL
+    1426/    6523 : 21 01 00            	LD	HL,01H
+    1427/    6526 : 19                  	ADD	HL,DE
+    1428/    6527 : 22 06 80            	LD	(V_06H),HL
+    1429/    652A : 21 36 54            	LD	HL,C_8C31
+    1430/    652D : 22 38 80            	LD	(V_38H),HL
+    1431/    6530 : C3 F3 65            	JP	A_022
+    1432/    6533 : D5                  A_085:	PUSH	DE
+    1433/    6534 : 21 01 00            	LD	HL,01H
+    1434/    6537 : EB                  	EX	DE,HL
+    1435/    6538 : 2A 12 80            	LD	HL,(V_12H)
+    1436/    653B : 19                  	ADD	HL,DE
+    1437/    653C : D1                  	POP	DE
+    1438/    653D : 6E                  	LD	L,(HL)
+    1439/    653E : 26 00               	LD	H,00H
+    1440/    6540 : EB                  	EX	DE,HL
+    1441/    6541 : 21 24 00            	LD	HL,024H
+    1442/    6544 : CD 1E 54            	CALL	C_8A03
+    1443/    6547 : B3                  	OR	E
+    1444/    6548 : CA 4E 65            	JP	Z,A_087
+    1445/    654B : C3 62 65            	JP	A_088
+    1446/    654E : 2A 12 80            A_087:	LD	HL,(V_12H)
+    1447/    6551 : EB                  	EX	DE,HL
+    1448/    6552 : 21 03 00            	LD	HL,03H
+    1449/    6555 : 19                  	ADD	HL,DE
+    1450/    6556 : 22 12 80            	LD	(V_12H),HL
+    1451/    6559 : 21 36 54            	LD	HL,C_8C31
+    1452/    655C : 22 38 80            	LD	(V_38H),HL
+    1453/    655F : C3 F0 65            	JP	A_036
+    1454/    6562 : D5                  A_088:	PUSH	DE
+    1455/    6563 : 21 01 00            	LD	HL,01H
+    1456/    6566 : EB                  	EX	DE,HL
+    1457/    6567 : 2A 12 80            	LD	HL,(V_12H)
+    1458/    656A : 19                  	ADD	HL,DE
+    1459/    656B : D1                  	POP	DE
+    1460/    656C : 6E                  	LD	L,(HL)
+    1461/    656D : 26 00               	LD	H,00H
+    1462/    656F : EB                  	EX	DE,HL
+    1463/    6570 : 21 28 00            	LD	HL,028H
+    1464/    6573 : CD 1E 54            	CALL	C_8A03
+    1465/    6576 : B3                  	OR	E
+    1466/    6577 : CA 7D 65            	JP	Z,A_089
+    1467/    657A : C3 14 74            	JP	A_044
+    1468/    657D : 2A 12 80            A_089:	LD	HL,(V_12H)
+    1469/    6580 : EB                  	EX	DE,HL
+    1470/    6581 : 21 01 00            	LD	HL,01H
+    1471/    6584 : 19                  	ADD	HL,DE
+    1472/    6585 : 22 12 80            	LD	(V_12H),HL
+    1473/    6588 : CD 4B 69            	CALL	A_067
+    1474/    658B : 21 00 00            	LD	HL,00H
+    1475/    658E : EB                  	EX	DE,HL
+    1476/    658F : 2A 06 80            	LD	HL,(V_06H)
+    1477/    6592 : 19                  	ADD	HL,DE
+    1478/    6593 : E5                  	PUSH	HL
+    1479/    6594 : 21 4D 00            	LD	HL,04DH
+    1480/    6597 : EB                  	EX	DE,HL
+    1481/    6598 : E1                  	POP	HL
+    1482/    6599 : 73                  	LD	(HL),E
+    1483/    659A : 2A 06 80            	LD	HL,(V_06H)
+    1484/    659D : EB                  	EX	DE,HL
+    1485/    659E : 21 01 00            	LD	HL,01H
+    1486/    65A1 : 19                  	ADD	HL,DE
+    1487/    65A2 : 22 06 80            	LD	(V_06H),HL
+    1488/    65A5 : 2A 12 80            	LD	HL,(V_12H)
+    1489/    65A8 : EB                  	EX	DE,HL
+    1490/    65A9 : 21 01 00            	LD	HL,01H
+    1491/    65AC : 19                  	ADD	HL,DE
+    1492/    65AD : 22 12 80            	LD	(V_12H),HL
+    1493/    65B0 : 21 30 54            	LD	HL,C_8B9C
+    1494/    65B3 : 22 38 80            	LD	(V_38H),HL
+    1495/    65B6 : 21 00 00            	LD	HL,00H
+    1496/    65B9 : EB                  	EX	DE,HL
+    1497/    65BA : 2A 06 80            	LD	HL,(V_06H)
+    1498/    65BD : 19                  	ADD	HL,DE
+    1499/    65BE : E5                  	PUSH	HL
+    1500/    65BF : 21 C5 00            	LD	HL,0C5H
+    1501/    65C2 : EB                  	EX	DE,HL
+    1502/    65C3 : E1                  	POP	HL
+    1503/    65C4 : 73                  	LD	(HL),E
+    1504/    65C5 : 2A 06 80            	LD	HL,(V_06H)
+    1505/    65C8 : EB                  	EX	DE,HL
+    1506/    65C9 : 21 01 00            	LD	HL,01H
+    1507/    65CC : 19                  	ADD	HL,DE
+    1508/    65CD : 22 06 80            	LD	(V_06H),HL
+    1509/    65D0 : CD 68 66            	CALL	A_086
+    1510/    65D3 : 21 00 00            	LD	HL,00H
+    1511/    65D6 : EB                  	EX	DE,HL
+    1512/    65D7 : 2A 06 80            	LD	HL,(V_06H)
+    1513/    65DA : 19                  	ADD	HL,DE
+    1514/    65DB : E5                  	PUSH	HL
+    1515/    65DC : 21 C1 00            	LD	HL,0C1H
+    1516/    65DF : EB                  	EX	DE,HL
+    1517/    65E0 : E1                  	POP	HL
+    1518/    65E1 : 73                  	LD	(HL),E
+    1519/    65E2 : 2A 06 80            	LD	HL,(V_06H)
+    1520/    65E5 : EB                  	EX	DE,HL
+    1521/    65E6 : 21 01 00            	LD	HL,01H
+    1522/    65E9 : 19                  	ADD	HL,DE
+    1523/    65EA : 22 06 80            	LD	(V_06H),HL
+    1524/    65ED : C3 F3 65            	JP	A_022
+    1525/    65F0 : CD 68 66            A_036:	CALL	A_086
+    1526/    65F3 : 21 00 00            A_022:	LD	HL,00H
+    1527/    65F6 : EB                  	EX	DE,HL
+    1528/    65F7 : 2A 06 80            	LD	HL,(V_06H)
+    1529/    65FA : 19                  	ADD	HL,DE
+    1530/    65FB : E5                  	PUSH	HL
+    1531/    65FC : 21 CD 00            	LD	HL,0CDH
+    1532/    65FF : EB                  	EX	DE,HL
+    1533/    6600 : E1                  	POP	HL
+    1534/    6601 : 73                  	LD	(HL),E
+    1535/    6602 : 2A 06 80            	LD	HL,(V_06H)
+    1536/    6605 : EB                  	EX	DE,HL
+    1537/    6606 : 21 03 00            	LD	HL,03H
+    1538/    6609 : 19                  	ADD	HL,DE
+    1539/    660A : 22 06 80            	LD	(V_06H),HL
+    1540/    660D : D5                  	PUSH	DE
+    1541/    660E : 21 01 00            	LD	HL,01H
+    1542/    6611 : EB                  	EX	DE,HL
+    1543/    6612 : CD 27 54            	CALL	C_8A5B
+    1544/    6615 : EB                  	EX	DE,HL
+    1545/    6616 : D1                  	POP	DE
+    1546/    6617 : EB                  	EX	DE,HL
+    1547/    6618 : 2A 06 80            	LD	HL,(V_06H)
+    1548/    661B : 19                  	ADD	HL,DE
+    1549/    661C : 19                  	ADD	HL,DE
+    1550/    661D : E5                  	PUSH	HL
+    1551/    661E : 2A 38 80            	LD	HL,(V_38H)
+    1552/    6621 : EB                  	EX	DE,HL
+    1553/    6622 : E1                  	POP	HL
+    1554/    6623 : 73                  	LD	(HL),E
+    1555/    6624 : 23                  	INC	HL
+    1556/    6625 : 72                  	LD	(HL),D
+    1557/    6626 : C3 1E 61            	JP	A_043
+    1558/    6629 : CD 68 66            A_134:	CALL	A_086
+    1559/    662C : CD D6 60            	CALL	A_090
+    1560/    662F : C9                  	RET
+    1561/    6630 : 21 00 00            A_157:	LD	HL,00H
+    1562/    6633 : EB                  	EX	DE,HL
+    1563/    6634 : 2A 06 80            	LD	HL,(V_06H)
+    1564/    6637 : 19                  	ADD	HL,DE
+    1565/    6638 : E5                  	PUSH	HL
+    1566/    6639 : 21 E5 00            	LD	HL,0E5H
+    1567/    663C : EB                  	EX	DE,HL
+    1568/    663D : E1                  	POP	HL
+    1569/    663E : 73                  	LD	(HL),E
+    1570/    663F : 2A 06 80            	LD	HL,(V_06H)
+    1571/    6642 : EB                  	EX	DE,HL
+    1572/    6643 : 21 01 00            	LD	HL,01H
+    1573/    6646 : 19                  	ADD	HL,DE
+    1574/    6647 : 22 06 80            	LD	(V_06H),HL
+    1575/    664A : CD 68 66            	CALL	A_086
+    1576/    664D : 21 00 00            	LD	HL,00H
+    1577/    6650 : EB                  	EX	DE,HL
+    1578/    6651 : 2A 06 80            	LD	HL,(V_06H)
+    1579/    6654 : 19                  	ADD	HL,DE
+    1580/    6655 : E5                  	PUSH	HL
+    1581/    6656 : 21 E1 00            	LD	HL,0E1H
+    1582/    6659 : EB                  	EX	DE,HL
+    1583/    665A : E1                  	POP	HL
+    1584/    665B : 73                  	LD	(HL),E
+    1585/    665C : 2A 06 80            	LD	HL,(V_06H)
+    1586/    665F : EB                  	EX	DE,HL
+    1587/    6660 : 21 01 00            	LD	HL,01H
+    1588/    6663 : 19                  	ADD	HL,DE
+    1589/    6664 : 22 06 80            	LD	(V_06H),HL
+    1590/    6667 : C9                  	RET
+    1591/    6668 : CD 4B 69            A_086:	CALL	A_067
+    1592/    666B : 21 00 00            	LD	HL,00H
+    1593/    666E : EB                  	EX	DE,HL
+    1594/    666F : 2A 06 80            	LD	HL,(V_06H)
+    1595/    6672 : 19                  	ADD	HL,DE
+    1596/    6673 : E5                  	PUSH	HL
+    1597/    6674 : 21 EB 00            	LD	HL,0EBH
+    1598/    6677 : EB                  	EX	DE,HL
+    1599/    6678 : E1                  	POP	HL
+    1600/    6679 : 73                  	LD	(HL),E
+    1601/    667A : 2A 06 80            	LD	HL,(V_06H)
+    1602/    667D : EB                  	EX	DE,HL
+    1603/    667E : 21 01 00            	LD	HL,01H
+    1604/    6681 : 19                  	ADD	HL,DE
+    1605/    6682 : 22 06 80            	LD	(V_06H),HL
+    1606/    6685 : D5                  A_103:	PUSH	DE
+    1607/    6686 : 21 00 00            	LD	HL,00H
+    1608/    6689 : EB                  	EX	DE,HL
+    1609/    668A : 2A 12 80            	LD	HL,(V_12H)
+    1610/    668D : 19                  	ADD	HL,DE
+    1611/    668E : D1                  	POP	DE
+    1612/    668F : 6E                  	LD	L,(HL)
+    1613/    6690 : 26 00               	LD	H,00H
+    1614/    6692 : 22 14 80            	LD	(V_14H),HL
+    1615/    6695 : 2A 12 80            	LD	HL,(V_12H)
+    1616/    6698 : EB                  	EX	DE,HL
+    1617/    6699 : 21 01 00            	LD	HL,01H
+    1618/    669C : 19                  	ADD	HL,DE
+    1619/    669D : 22 12 80            	LD	(V_12H),HL
+    1620/    66A0 : 2A 14 80            	LD	HL,(V_14H)
+    1621/    66A3 : EB                  	EX	DE,HL
+    1622/    66A4 : 21 2D 00            	LD	HL,02DH
+    1623/    66A7 : CD 1E 54            	CALL	C_8A03
+    1624/    66AA : B3                  	OR	E
+    1625/    66AB : C2 BA 66            	JP	NZ,A_091
+    1626/    66AE : CD 4B 69            	CALL	A_067
+    1627/    66B1 : 21 1E 54            	LD	HL,C_8A03
+    1628/    66B4 : 22 14 80            	LD	(V_14H),HL
+    1629/    66B7 : C3 12 68            	JP	A_092
+    1630/    66BA : 2A 14 80            A_091:	LD	HL,(V_14H)
+    1631/    66BD : EB                  	EX	DE,HL
+    1632/    66BE : 21 2A 00            	LD	HL,02AH
+    1633/    66C1 : CD 1E 54            	CALL	C_8A03
+    1634/    66C4 : B3                  	OR	E
+    1635/    66C5 : C2 D4 66            	JP	NZ,A_093
+    1636/    66C8 : CD 4B 69            	CALL	A_067
+    1637/    66CB : 21 21 54            	LD	HL,C_8A0F
+    1638/    66CE : 22 14 80            	LD	(V_14H),HL
+    1639/    66D1 : C3 12 68            	JP	A_092
+    1640/    66D4 : 2A 14 80            A_093:	LD	HL,(V_14H)
+    1641/    66D7 : EB                  	EX	DE,HL
+    1642/    66D8 : 21 2F 00            	LD	HL,02FH
+    1643/    66DB : CD 1E 54            	CALL	C_8A03
+    1644/    66DE : B3                  	OR	E
+    1645/    66DF : C2 EE 66            	JP	NZ,A_094
+    1646/    66E2 : CD 4B 69            	CALL	A_067
+    1647/    66E5 : 21 24 54            	LD	HL,C_8A2C
+    1648/    66E8 : 22 14 80            	LD	(V_14H),HL
+    1649/    66EB : C3 12 68            	JP	A_092
+    1650/    66EE : 2A 14 80            A_094:	LD	HL,(V_14H)
+    1651/    66F1 : EB                  	EX	DE,HL
+    1652/    66F2 : 21 3D 00            	LD	HL,03DH
+    1653/    66F5 : CD 1E 54            	CALL	C_8A03
+    1654/    66F8 : B3                  	OR	E
+    1655/    66F9 : C2 08 67            	JP	NZ,A_095
+    1656/    66FC : CD 4B 69            	CALL	A_067
+    1657/    66FF : 21 C2 00            	LD	HL,0C2H
+    1658/    6702 : 22 14 80            	LD	(V_14H),HL
+    1659/    6705 : C3 62 68            	JP	A_096
+    1660/    6708 : 2A 14 80            A_095:	LD	HL,(V_14H)
+    1661/    670B : EB                  	EX	DE,HL
+    1662/    670C : 21 3C 00            	LD	HL,03CH
+    1663/    670F : CD 1E 54            	CALL	C_8A03
+    1664/    6712 : B3                  	OR	E
+    1665/    6713 : C2 19 67            	JP	NZ,A_097
+    1666/    6716 : C3 6D 67            	JP	A_098
+    1667/    6719 : 2A 14 80            A_097:	LD	HL,(V_14H)
+    1668/    671C : EB                  	EX	DE,HL
+    1669/    671D : 21 3E 00            	LD	HL,03EH
+    1670/    6720 : CD 1E 54            	CALL	C_8A03
+    1671/    6723 : B3                  	OR	E
+    1672/    6724 : C2 2A 67            	JP	NZ,A_099
+    1673/    6727 : C3 D7 67            	JP	A_100
+    1674/    672A : 2A 14 80            A_099:	LD	HL,(V_14H)
+    1675/    672D : EB                  	EX	DE,HL
+    1676/    672E : 21 2B 00            	LD	HL,02BH
+    1677/    6731 : CD 1E 54            	CALL	C_8A03
+    1678/    6734 : B3                  	OR	E
+    1679/    6735 : C2 3B 67            	JP	NZ,A_101
+    1680/    6738 : C3 4A 67            	JP	A_102
+    1681/    673B : 2A 12 80            A_101:	LD	HL,(V_12H)
+    1682/    673E : EB                  	EX	DE,HL
+    1683/    673F : 21 01 00            	LD	HL,01H
+    1684/    6742 : CD 1E 54            	CALL	C_8A03
+    1685/    6745 : EB                  	EX	DE,HL
+    1686/    6746 : 22 12 80            	LD	(V_12H),HL
+    1687/    6749 : C9                  	RET
+    1688/    674A : CD 4B 69            A_102:	CALL	A_067
+    1689/    674D : 21 00 00            	LD	HL,00H
+    1690/    6750 : EB                  	EX	DE,HL
+    1691/    6751 : 2A 06 80            	LD	HL,(V_06H)
+    1692/    6754 : 19                  	ADD	HL,DE
+    1693/    6755 : 19                  	ADD	HL,DE
+    1694/    6756 : E5                  	PUSH	HL
+    1695/    6757 : 21 19 EB            	LD	HL,0EB19H
+    1696/    675A : EB                  	EX	DE,HL
+    1697/    675B : E1                  	POP	HL
+    1698/    675C : 73                  	LD	(HL),E
+    1699/    675D : 23                  	INC	HL
+    1700/    675E : 72                  	LD	(HL),D
+    1701/    675F : 2A 06 80            	LD	HL,(V_06H)
+    1702/    6762 : EB                  	EX	DE,HL
+    1703/    6763 : 21 02 00            	LD	HL,02H
+    1704/    6766 : 19                  	ADD	HL,DE
+    1705/    6767 : 22 06 80            	LD	(V_06H),HL
+    1706/    676A : C3 85 66            	JP	A_103
+    1707/    676D : D5                  A_098:	PUSH	DE
+    1708/    676E : 21 00 00            	LD	HL,00H
+    1709/    6771 : EB                  	EX	DE,HL
+    1710/    6772 : 2A 12 80            	LD	HL,(V_12H)
+    1711/    6775 : 19                  	ADD	HL,DE
+    1712/    6776 : D1                  	POP	DE
+    1713/    6777 : 6E                  	LD	L,(HL)
+    1714/    6778 : 26 00               	LD	H,00H
+    1715/    677A : EB                  	EX	DE,HL
+    1716/    677B : 21 3E 00            	LD	HL,03EH
+    1717/    677E : CD 1E 54            	CALL	C_8A03
+    1718/    6781 : B3                  	OR	E
+    1719/    6782 : C2 9C 67            	JP	NZ,A_104
+    1720/    6785 : 2A 12 80            	LD	HL,(V_12H)
+    1721/    6788 : EB                  	EX	DE,HL
+    1722/    6789 : 21 01 00            	LD	HL,01H
+    1723/    678C : 19                  	ADD	HL,DE
+    1724/    678D : 22 12 80            	LD	(V_12H),HL
+    1725/    6790 : CD 4B 69            	CALL	A_067
+    1726/    6793 : 21 CA 00            	LD	HL,0CAH
+    1727/    6796 : 22 14 80            	LD	(V_14H),HL
+    1728/    6799 : C3 62 68            	JP	A_096
+    1729/    679C : D5                  A_104:	PUSH	DE
+    1730/    679D : 21 00 00            	LD	HL,00H
+    1731/    67A0 : EB                  	EX	DE,HL
+    1732/    67A1 : 2A 12 80            	LD	HL,(V_12H)
+    1733/    67A4 : 19                  	ADD	HL,DE
+    1734/    67A5 : D1                  	POP	DE
+    1735/    67A6 : 6E                  	LD	L,(HL)
+    1736/    67A7 : 26 00               	LD	H,00H
+    1737/    67A9 : EB                  	EX	DE,HL
+    1738/    67AA : 21 3D 00            	LD	HL,03DH
+    1739/    67AD : CD 1E 54            	CALL	C_8A03
+    1740/    67B0 : B3                  	OR	E
+    1741/    67B1 : C2 CB 67            	JP	NZ,A_105
+    1742/    67B4 : 2A 12 80            	LD	HL,(V_12H)
+    1743/    67B7 : EB                  	EX	DE,HL
+    1744/    67B8 : 21 01 00            	LD	HL,01H
+    1745/    67BB : 19                  	ADD	HL,DE
+    1746/    67BC : 22 12 80            	LD	(V_12H),HL
+    1747/    67BF : CD 4B 69            	CALL	A_067
+    1748/    67C2 : 21 FA 00            	LD	HL,0FAH
+    1749/    67C5 : 22 14 80            	LD	(V_14H),HL
+    1750/    67C8 : C3 48 68            	JP	A_106
+    1751/    67CB : CD 4B 69            A_105:	CALL	A_067
+    1752/    67CE : 21 F2 00            	LD	HL,0F2H
+    1753/    67D1 : 22 14 80            	LD	(V_14H),HL
+    1754/    67D4 : C3 62 68            	JP	A_096
+    1755/    67D7 : D5                  A_100:	PUSH	DE
+    1756/    67D8 : 21 00 00            	LD	HL,00H
+    1757/    67DB : EB                  	EX	DE,HL
+    1758/    67DC : 2A 12 80            	LD	HL,(V_12H)
+    1759/    67DF : 19                  	ADD	HL,DE
+    1760/    67E0 : D1                  	POP	DE
+    1761/    67E1 : 6E                  	LD	L,(HL)
+    1762/    67E2 : 26 00               	LD	H,00H
+    1763/    67E4 : EB                  	EX	DE,HL
+    1764/    67E5 : 21 3D 00            	LD	HL,03DH
+    1765/    67E8 : CD 1E 54            	CALL	C_8A03
+    1766/    67EB : B3                  	OR	E
+    1767/    67EC : C2 06 68            	JP	NZ,A_107
+    1768/    67EF : 2A 12 80            	LD	HL,(V_12H)
+    1769/    67F2 : EB                  	EX	DE,HL
+    1770/    67F3 : 21 01 00            	LD	HL,01H
+    1771/    67F6 : 19                  	ADD	HL,DE
+    1772/    67F7 : 22 12 80            	LD	(V_12H),HL
+    1773/    67FA : CD 4B 69            	CALL	A_067
+    1774/    67FD : 21 FA 00            	LD	HL,0FAH
+    1775/    6800 : 22 14 80            	LD	(V_14H),HL
+    1776/    6803 : C3 62 68            	JP	A_096
+    1777/    6806 : CD 4B 69            A_107:	CALL	A_067
+    1778/    6809 : 21 F2 00            	LD	HL,0F2H
+    1779/    680C : 22 14 80            	LD	(V_14H),HL
+    1780/    680F : C3 48 68            	JP	A_106
+    1781/    6812 : 21 00 00            A_092:	LD	HL,00H
+    1782/    6815 : EB                  	EX	DE,HL
+    1783/    6816 : 2A 06 80            	LD	HL,(V_06H)
+    1784/    6819 : 19                  	ADD	HL,DE
+    1785/    681A : E5                  	PUSH	HL
+    1786/    681B : 21 CD 00            	LD	HL,0CDH
+    1787/    681E : EB                  	EX	DE,HL
+    1788/    681F : E1                  	POP	HL
+    1789/    6820 : 73                  	LD	(HL),E
+    1790/    6821 : 2A 06 80            	LD	HL,(V_06H)
+    1791/    6824 : EB                  	EX	DE,HL
+    1792/    6825 : 21 03 00            	LD	HL,03H
+    1793/    6828 : 19                  	ADD	HL,DE
+    1794/    6829 : 22 06 80            	LD	(V_06H),HL
+    1795/    682C : D5                  	PUSH	DE
+    1796/    682D : 21 01 00            	LD	HL,01H
+    1797/    6830 : EB                  	EX	DE,HL
+    1798/    6831 : CD 27 54            	CALL	C_8A5B
+    1799/    6834 : EB                  	EX	DE,HL
+    1800/    6835 : D1                  	POP	DE
+    1801/    6836 : EB                  	EX	DE,HL
+    1802/    6837 : 2A 06 80            	LD	HL,(V_06H)
+    1803/    683A : 19                  	ADD	HL,DE
+    1804/    683B : 19                  	ADD	HL,DE
+    1805/    683C : E5                  	PUSH	HL
+    1806/    683D : 2A 14 80            	LD	HL,(V_14H)
+    1807/    6840 : EB                  	EX	DE,HL
+    1808/    6841 : E1                  	POP	HL
+    1809/    6842 : 73                  	LD	(HL),E
+    1810/    6843 : 23                  	INC	HL
+    1811/    6844 : 72                  	LD	(HL),D
+    1812/    6845 : C3 85 66            	JP	A_103
+    1813/    6848 : 21 00 00            A_106:	LD	HL,00H
+    1814/    684B : EB                  	EX	DE,HL
+    1815/    684C : 2A 06 80            	LD	HL,(V_06H)
+    1816/    684F : 19                  	ADD	HL,DE
+    1817/    6850 : E5                  	PUSH	HL
+    1818/    6851 : 21 EB 00            	LD	HL,0EBH
+    1819/    6854 : EB                  	EX	DE,HL
+    1820/    6855 : E1                  	POP	HL
+    1821/    6856 : 73                  	LD	(HL),E
+    1822/    6857 : 2A 06 80            	LD	HL,(V_06H)
+    1823/    685A : EB                  	EX	DE,HL
+    1824/    685B : 21 01 00            	LD	HL,01H
+    1825/    685E : 19                  	ADD	HL,DE
+    1826/    685F : 22 06 80            	LD	(V_06H),HL
+    1827/    6862 : 21 00 00            A_096:	LD	HL,00H
+    1828/    6865 : EB                  	EX	DE,HL
+    1829/    6866 : 2A 06 80            	LD	HL,(V_06H)
+    1830/    6869 : 19                  	ADD	HL,DE
+    1831/    686A : E5                  	PUSH	HL
+    1832/    686B : 21 CD 00            	LD	HL,0CDH
+    1833/    686E : EB                  	EX	DE,HL
+    1834/    686F : E1                  	POP	HL
+    1835/    6870 : 73                  	LD	(HL),E
+    1836/    6871 : 2A 06 80            	LD	HL,(V_06H)
+    1837/    6874 : EB                  	EX	DE,HL
+    1838/    6875 : 21 03 00            	LD	HL,03H
+    1839/    6878 : 19                  	ADD	HL,DE
+    1840/    6879 : 22 06 80            	LD	(V_06H),HL
+    1841/    687C : D5                  	PUSH	DE
+    1842/    687D : 21 01 00            	LD	HL,01H
+    1843/    6880 : EB                  	EX	DE,HL
+    1844/    6881 : CD 27 54            	CALL	C_8A5B
+    1845/    6884 : EB                  	EX	DE,HL
+    1846/    6885 : D1                  	POP	DE
+    1847/    6886 : EB                  	EX	DE,HL
+    1848/    6887 : 2A 06 80            	LD	HL,(V_06H)
+    1849/    688A : 19                  	ADD	HL,DE
+    1850/    688B : 19                  	ADD	HL,DE
+    1851/    688C : E5                  	PUSH	HL
+    1852/    688D : 21 1E 54            	LD	HL,C_8A03
+    1853/    6890 : EB                  	EX	DE,HL
+    1854/    6891 : E1                  	POP	HL
+    1855/    6892 : 73                  	LD	(HL),E
+    1856/    6893 : 23                  	INC	HL
+    1857/    6894 : 72                  	LD	(HL),D
+    1858/    6895 : 2A 14 80            	LD	HL,(V_14H)
+    1859/    6898 : EB                  	EX	DE,HL
+    1860/    6899 : 21 10 00            	LD	HL,010H
+    1861/    689C : CD 24 54            	CALL	C_8A2C
+    1862/    689F : 21 0C 00            	LD	HL,0CH
+    1863/    68A2 : CD 1E 54            	CALL	C_8A03
+    1864/    68A5 : B3                  	OR	E
+    1865/    68A6 : C2 C3 68            	JP	NZ,A_108
+    1866/    68A9 : 21 00 00            	LD	HL,00H
+    1867/    68AC : EB                  	EX	DE,HL
+    1868/    68AD : 2A 06 80            	LD	HL,(V_06H)
+    1869/    68B0 : 19                  	ADD	HL,DE
+    1870/    68B1 : E5                  	PUSH	HL
+    1871/    68B2 : 21 B3 00            	LD	HL,0B3H
+    1872/    68B5 : EB                  	EX	DE,HL
+    1873/    68B6 : E1                  	POP	HL
+    1874/    68B7 : 73                  	LD	(HL),E
+    1875/    68B8 : 2A 06 80            	LD	HL,(V_06H)
+    1876/    68BB : EB                  	EX	DE,HL
+    1877/    68BC : 21 01 00            	LD	HL,01H
+    1878/    68BF : 19                  	ADD	HL,DE
+    1879/    68C0 : 22 06 80            	LD	(V_06H),HL
+    1880/    68C3 : 21 00 00            A_108:	LD	HL,00H
+    1881/    68C6 : EB                  	EX	DE,HL
+    1882/    68C7 : 2A 06 80            	LD	HL,(V_06H)
+    1883/    68CA : 19                  	ADD	HL,DE
+    1884/    68CB : E5                  	PUSH	HL
+    1885/    68CC : 21 11 00            	LD	HL,011H
+    1886/    68CF : EB                  	EX	DE,HL
+    1887/    68D0 : E1                  	POP	HL
+    1888/    68D1 : 73                  	LD	(HL),E
+    1889/    68D2 : 2A 06 80            	LD	HL,(V_06H)
+    1890/    68D5 : EB                  	EX	DE,HL
+    1891/    68D6 : 21 03 00            	LD	HL,03H
+    1892/    68D9 : 19                  	ADD	HL,DE
+    1893/    68DA : 22 06 80            	LD	(V_06H),HL
+    1894/    68DD : D5                  	PUSH	DE
+    1895/    68DE : 21 01 00            	LD	HL,01H
+    1896/    68E1 : EB                  	EX	DE,HL
+    1897/    68E2 : CD 27 54            	CALL	C_8A5B
+    1898/    68E5 : EB                  	EX	DE,HL
+    1899/    68E6 : D1                  	POP	DE
+    1900/    68E7 : EB                  	EX	DE,HL
+    1901/    68E8 : 2A 06 80            	LD	HL,(V_06H)
+    1902/    68EB : 19                  	ADD	HL,DE
+    1903/    68EC : 19                  	ADD	HL,DE
+    1904/    68ED : E5                  	PUSH	HL
+    1905/    68EE : 21 00 00            	LD	HL,00H
+    1906/    68F1 : EB                  	EX	DE,HL
+    1907/    68F2 : E1                  	POP	HL
+    1908/    68F3 : 73                  	LD	(HL),E
+    1909/    68F4 : 23                  	INC	HL
+    1910/    68F5 : 72                  	LD	(HL),D
+    1911/    68F6 : 21 00 00            	LD	HL,00H
+    1912/    68F9 : EB                  	EX	DE,HL
+    1913/    68FA : 2A 06 80            	LD	HL,(V_06H)
+    1914/    68FD : 19                  	ADD	HL,DE
+    1915/    68FE : E5                  	PUSH	HL
+    1916/    68FF : 2A 14 80            	LD	HL,(V_14H)
+    1917/    6902 : EB                  	EX	DE,HL
+    1918/    6903 : E1                  	POP	HL
+    1919/    6904 : 73                  	LD	(HL),E
+    1920/    6905 : 2A 06 80            	LD	HL,(V_06H)
+    1921/    6908 : EB                  	EX	DE,HL
+    1922/    6909 : 21 03 00            	LD	HL,03H
+    1923/    690C : 19                  	ADD	HL,DE
+    1924/    690D : 22 06 80            	LD	(V_06H),HL
+    1925/    6910 : D5                  	PUSH	DE
+    1926/    6911 : 21 01 00            	LD	HL,01H
+    1927/    6914 : EB                  	EX	DE,HL
+    1928/    6915 : CD 27 54            	CALL	C_8A5B
+    1929/    6918 : EB                  	EX	DE,HL
+    1930/    6919 : D1                  	POP	DE
+    1931/    691A : EB                  	EX	DE,HL
+    1932/    691B : 2A 06 80            	LD	HL,(V_06H)
+    1933/    691E : 19                  	ADD	HL,DE
+    1934/    691F : 19                  	ADD	HL,DE
+    1935/    6920 : E5                  	PUSH	HL
+    1936/    6921 : 2A 06 80            	LD	HL,(V_06H)
+    1937/    6924 : EB                  	EX	DE,HL
+    1938/    6925 : 21 01 00            	LD	HL,01H
+    1939/    6928 : 19                  	ADD	HL,DE
+    1940/    6929 : EB                  	EX	DE,HL
+    1941/    692A : E1                  	POP	HL
+    1942/    692B : 73                  	LD	(HL),E
+    1943/    692C : 23                  	INC	HL
+    1944/    692D : 72                  	LD	(HL),D
+    1945/    692E : 21 00 00            	LD	HL,00H
+    1946/    6931 : EB                  	EX	DE,HL
+    1947/    6932 : 2A 06 80            	LD	HL,(V_06H)
+    1948/    6935 : 19                  	ADD	HL,DE
+    1949/    6936 : E5                  	PUSH	HL
+    1950/    6937 : 21 1C 00            	LD	HL,01CH
+    1951/    693A : EB                  	EX	DE,HL
+    1952/    693B : E1                  	POP	HL
+    1953/    693C : 73                  	LD	(HL),E
+    1954/    693D : 2A 06 80            	LD	HL,(V_06H)
+    1955/    6940 : EB                  	EX	DE,HL
+    1956/    6941 : 21 01 00            	LD	HL,01H
+    1957/    6944 : 19                  	ADD	HL,DE
+    1958/    6945 : 22 06 80            	LD	(V_06H),HL
+    1959/    6948 : C3 85 66            	JP	A_103
+    1960/    694B : D5                  A_067:	PUSH	DE
+    1961/    694C : 21 00 00            	LD	HL,00H
+    1962/    694F : EB                  	EX	DE,HL
+    1963/    6950 : 2A 12 80            	LD	HL,(V_12H)
+    1964/    6953 : 19                  	ADD	HL,DE
+    1965/    6954 : D1                  	POP	DE
+    1966/    6955 : 6E                  	LD	L,(HL)
+    1967/    6956 : 26 00               	LD	H,00H
+    1968/    6958 : 22 14 80            	LD	(V_14H),HL
+    1969/    695B : 2A 12 80            	LD	HL,(V_12H)
+    1970/    695E : EB                  	EX	DE,HL
+    1971/    695F : 21 01 00            	LD	HL,01H
+    1972/    6962 : 19                  	ADD	HL,DE
+    1973/    6963 : 22 12 80            	LD	(V_12H),HL
+    1974/    6966 : D5                  	PUSH	DE
+    1975/    6967 : 2A 14 80            	LD	HL,(V_14H)
+    1976/    696A : EB                  	EX	DE,HL
+    1977/    696B : 21 30 00            	LD	HL,030H
+    1978/    696E : CD 1E 54            	CALL	C_8A03
+    1979/    6971 : 11 00 00            	LD	DE,00H
+    1980/    6974 : FA 78 69            	JP	M,A_109
+    1981/    6977 : 1C                  	INC	E
+    1982/    6978 : EB                  A_109:	EX	DE,HL
+    1983/    6979 : D1                  	POP	DE
+    1984/    697A : EB                  	EX	DE,HL
+    1985/    697B : D5                  	PUSH	DE
+    1986/    697C : 2A 14 80            	LD	HL,(V_14H)
+    1987/    697F : EB                  	EX	DE,HL
+    1988/    6980 : 21 39 00            	LD	HL,039H
+    1989/    6983 : EB                  	EX	DE,HL
+    1990/    6984 : CD 1E 54            	CALL	C_8A03
+    1991/    6987 : 11 00 00            	LD	DE,00H
+    1992/    698A : FA 8E 69            	JP	M,A_110
+    1993/    698D : 1C                  	INC	E
+    1994/    698E : EB                  A_110:	EX	DE,HL
+    1995/    698F : D1                  	POP	DE
+    1996/    6990 : CD 21 54            	CALL	C_8A0F
+    1997/    6993 : D5                  	PUSH	DE
+    1998/    6994 : 2A 14 80            	LD	HL,(V_14H)
+    1999/    6997 : EB                  	EX	DE,HL
+    2000/    6998 : 21 24 00            	LD	HL,024H
+    2001/    699B : CD 1E 54            	CALL	C_8A03
+    2002/    699E : B3                  	OR	E
+    2003/    699F : 11 00 00            	LD	DE,00H
+    2004/    69A2 : C2 A6 69            	JP	NZ,A_111
+    2005/    69A5 : 1C                  	INC	E
+    2006/    69A6 : EB                  A_111:	EX	DE,HL
+    2007/    69A7 : D1                  	POP	DE
+    2008/    69A8 : 19                  	ADD	HL,DE
+    2009/    69A9 : EB                  	EX	DE,HL
+    2010/    69AA : 7B                  	LD	A,E
+    2011/    69AB : B2                  	OR	D
+    2012/    69AC : CA B2 69            	JP	Z,A_112
+    2013/    69AF : C3 18 6B            	JP	A_113
+    2014/    69B2 : 2A 14 80            A_112:	LD	HL,(V_14H)
+    2015/    69B5 : EB                  	EX	DE,HL
+    2016/    69B6 : 21 22 00            	LD	HL,022H
+    2017/    69B9 : CD 1E 54            	CALL	C_8A03
+    2018/    69BC : B3                  	OR	E
+    2019/    69BD : C2 C3 69            	JP	NZ,A_114
+    2020/    69C0 : C3 FA 6A            	JP	A_115
+    2021/    69C3 : 2A 14 80            A_114:	LD	HL,(V_14H)
+    2022/    69C6 : EB                  	EX	DE,HL
+    2023/    69C7 : 21 26 00            	LD	HL,026H
+    2024/    69CA : CD 1E 54            	CALL	C_8A03
+    2025/    69CD : B3                  	OR	E
+    2026/    69CE : C2 ED 69            	JP	NZ,A_116
+    2027/    69D1 : D5                  	PUSH	DE
+    2028/    69D2 : D5                  	PUSH	DE
+    2029/    69D3 : 21 01 00            	LD	HL,01H
+    2030/    69D6 : EB                  	EX	DE,HL
+    2031/    69D7 : CD 27 54            	CALL	C_8A5B
+    2032/    69DA : EB                  	EX	DE,HL
+    2033/    69DB : D1                  	POP	DE
+    2034/    69DC : EB                  	EX	DE,HL
+    2035/    69DD : 2A 1C 80            	LD	HL,(V_1CH)
+    2036/    69E0 : 19                  	ADD	HL,DE
+    2037/    69E1 : 19                  	ADD	HL,DE
+    2038/    69E2 : D1                  	POP	DE
+    2039/    69E3 : 7E                  	LD	A,(HL)
+    2040/    69E4 : 23                  	INC	HL
+    2041/    69E5 : 66                  	LD	H,(HL)
+    2042/    69E6 : 6F                  	LD	L,A
+    2043/    69E7 : 22 1A 80            	LD	(V_1AH),HL
+    2044/    69EA : C3 49 6B            	JP	A_117
+    2045/    69ED : D5                  A_116:	PUSH	DE
+    2046/    69EE : 2A 14 80            	LD	HL,(V_14H)
+    2047/    69F1 : EB                  	EX	DE,HL
+    2048/    69F2 : 21 41 00            	LD	HL,041H
+    2049/    69F5 : CD 1E 54            	CALL	C_8A03
+    2050/    69F8 : 11 00 00            	LD	DE,00H
+    2051/    69FB : F2 FF 69            	JP	P,A_118
+    2052/    69FE : 1C                  	INC	E
+    2053/    69FF : EB                  A_118:	EX	DE,HL
+    2054/    6A00 : D1                  	POP	DE
+    2055/    6A01 : EB                  	EX	DE,HL
+    2056/    6A02 : D5                  	PUSH	DE
+    2057/    6A03 : 2A 14 80            	LD	HL,(V_14H)
+    2058/    6A06 : EB                  	EX	DE,HL
+    2059/    6A07 : 21 5A 00            	LD	HL,05AH
+    2060/    6A0A : EB                  	EX	DE,HL
+    2061/    6A0B : CD 1E 54            	CALL	C_8A03
+    2062/    6A0E : 11 00 00            	LD	DE,00H
+    2063/    6A11 : F2 15 6A            	JP	P,A_119
+    2064/    6A14 : 1C                  	INC	E
+    2065/    6A15 : EB                  A_119:	EX	DE,HL
+    2066/    6A16 : D1                  	POP	DE
+    2067/    6A17 : 19                  	ADD	HL,DE
+    2068/    6A18 : EB                  	EX	DE,HL
+    2069/    6A19 : 7B                  	LD	A,E
+    2070/    6A1A : B2                  	OR	D
+    2071/    6A1B : CA 21 6A            	JP	Z,A_120
+    2072/    6A1E : C3 5E 6C            	JP	A_121
+    2073/    6A21 : D5                  A_120:	PUSH	DE
+    2074/    6A22 : D5                  	PUSH	DE
+    2075/    6A23 : 21 00 00            	LD	HL,00H
+    2076/    6A26 : EB                  	EX	DE,HL
+    2077/    6A27 : 2A 12 80            	LD	HL,(V_12H)
+    2078/    6A2A : 19                  	ADD	HL,DE
+    2079/    6A2B : D1                  	POP	DE
+    2080/    6A2C : 6E                  	LD	L,(HL)
+    2081/    6A2D : 26 00               	LD	H,00H
+    2082/    6A2F : EB                  	EX	DE,HL
+    2083/    6A30 : 21 41 00            	LD	HL,041H
+    2084/    6A33 : CD 1E 54            	CALL	C_8A03
+    2085/    6A36 : 11 00 00            	LD	DE,00H
+    2086/    6A39 : FA 3D 6A            	JP	M,A_122
+    2087/    6A3C : 1C                  	INC	E
+    2088/    6A3D : EB                  A_122:	EX	DE,HL
+    2089/    6A3E : D1                  	POP	DE
+    2090/    6A3F : EB                  	EX	DE,HL
+    2091/    6A40 : D5                  	PUSH	DE
+    2092/    6A41 : D5                  	PUSH	DE
+    2093/    6A42 : 21 00 00            	LD	HL,00H
+    2094/    6A45 : EB                  	EX	DE,HL
+    2095/    6A46 : 2A 12 80            	LD	HL,(V_12H)
+    2096/    6A49 : 19                  	ADD	HL,DE
+    2097/    6A4A : D1                  	POP	DE
+    2098/    6A4B : 6E                  	LD	L,(HL)
+    2099/    6A4C : 26 00               	LD	H,00H
+    2100/    6A4E : EB                  	EX	DE,HL
+    2101/    6A4F : 21 5A 00            	LD	HL,05AH
+    2102/    6A52 : EB                  	EX	DE,HL
+    2103/    6A53 : CD 1E 54            	CALL	C_8A03
+    2104/    6A56 : 11 00 00            	LD	DE,00H
+    2105/    6A59 : FA 5D 6A            	JP	M,A_123
+    2106/    6A5C : 1C                  	INC	E
+    2107/    6A5D : EB                  A_123:	EX	DE,HL
+    2108/    6A5E : D1                  	POP	DE
+    2109/    6A5F : CD 21 54            	CALL	C_8A0F
+    2110/    6A62 : 7B                  	LD	A,E
+    2111/    6A63 : B2                  	OR	D
+    2112/    6A64 : CA 75 6A            	JP	Z,A_124
+    2113/    6A67 : 2A 12 80            	LD	HL,(V_12H)
+    2114/    6A6A : EB                  	EX	DE,HL
+    2115/    6A6B : 21 01 00            	LD	HL,01H
+    2116/    6A6E : 19                  	ADD	HL,DE
+    2117/    6A6F : 22 12 80            	LD	(V_12H),HL
+    2118/    6A72 : C3 21 6A            	JP	A_120
+    2119/    6A75 : D5                  A_124:	PUSH	DE
+    2120/    6A76 : 2A 14 80            	LD	HL,(V_14H)
+    2121/    6A79 : EB                  	EX	DE,HL
+    2122/    6A7A : 21 41 00            	LD	HL,041H
+    2123/    6A7D : CD 1E 54            	CALL	C_8A03
+    2124/    6A80 : EB                  	EX	DE,HL
+    2125/    6A81 : D1                  	POP	DE
+    2126/    6A82 : EB                  	EX	DE,HL
+    2127/    6A83 : 21 02 00            	LD	HL,02H
+    2128/    6A86 : CD 21 54            	CALL	C_8A0F
+    2129/    6A89 : 2A 0C 80            	LD	HL,(V_0CH)
+    2130/    6A8C : 19                  	ADD	HL,DE
+    2131/    6A8D : 22 14 80            	LD	(V_14H),HL
+    2132/    6A90 : D5                  	PUSH	DE
+    2133/    6A91 : 21 00 00            	LD	HL,00H
+    2134/    6A94 : EB                  	EX	DE,HL
+    2135/    6A95 : 2A 12 80            	LD	HL,(V_12H)
+    2136/    6A98 : 19                  	ADD	HL,DE
+    2137/    6A99 : D1                  	POP	DE
+    2138/    6A9A : 6E                  	LD	L,(HL)
+    2139/    6A9B : 26 00               	LD	H,00H
+    2140/    6A9D : EB                  	EX	DE,HL
+    2141/    6A9E : 21 3A 00            	LD	HL,03AH
+    2142/    6AA1 : CD 1E 54            	CALL	C_8A03
+    2143/    6AA4 : B3                  	OR	E
+    2144/    6AA5 : C2 AB 6A            	JP	NZ,A_125
+    2145/    6AA8 : C3 7D 6B            	JP	A_126
+    2146/    6AAB : D5                  A_125:	PUSH	DE
+    2147/    6AAC : 21 00 00            	LD	HL,00H
+    2148/    6AAF : EB                  	EX	DE,HL
+    2149/    6AB0 : 2A 12 80            	LD	HL,(V_12H)
+    2150/    6AB3 : 19                  	ADD	HL,DE
+    2151/    6AB4 : D1                  	POP	DE
+    2152/    6AB5 : 6E                  	LD	L,(HL)
+    2153/    6AB6 : 26 00               	LD	H,00H
+    2154/    6AB8 : EB                  	EX	DE,HL
+    2155/    6AB9 : 21 28 00            	LD	HL,028H
+    2156/    6ABC : CD 1E 54            	CALL	C_8A03
+    2157/    6ABF : B3                  	OR	E
+    2158/    6AC0 : C2 C6 6A            	JP	NZ,A_127
+    2159/    6AC3 : C3 B2 6B            	JP	A_128
+    2160/    6AC6 : 21 00 00            A_127:	LD	HL,00H
+    2161/    6AC9 : EB                  	EX	DE,HL
+    2162/    6ACA : 2A 06 80            	LD	HL,(V_06H)
+    2163/    6ACD : 19                  	ADD	HL,DE
+    2164/    6ACE : E5                  	PUSH	HL
+    2165/    6ACF : 21 2A 00            	LD	HL,02AH
+    2166/    6AD2 : EB                  	EX	DE,HL
+    2167/    6AD3 : E1                  	POP	HL
+    2168/    6AD4 : 73                  	LD	(HL),E
+    2169/    6AD5 : 2A 06 80            	LD	HL,(V_06H)
+    2170/    6AD8 : EB                  	EX	DE,HL
+    2171/    6AD9 : 21 03 00            	LD	HL,03H
+    2172/    6ADC : 19                  	ADD	HL,DE
+    2173/    6ADD : 22 06 80            	LD	(V_06H),HL
+    2174/    6AE0 : D5                  	PUSH	DE
+    2175/    6AE1 : 21 01 00            	LD	HL,01H
+    2176/    6AE4 : EB                  	EX	DE,HL
+    2177/    6AE5 : CD 27 54            	CALL	C_8A5B
+    2178/    6AE8 : EB                  	EX	DE,HL
+    2179/    6AE9 : D1                  	POP	DE
+    2180/    6AEA : EB                  	EX	DE,HL
+    2181/    6AEB : 2A 06 80            	LD	HL,(V_06H)
+    2182/    6AEE : 19                  	ADD	HL,DE
+    2183/    6AEF : 19                  	ADD	HL,DE
+    2184/    6AF0 : E5                  	PUSH	HL
+    2185/    6AF1 : 2A 14 80            	LD	HL,(V_14H)
+    2186/    6AF4 : EB                  	EX	DE,HL
+    2187/    6AF5 : E1                  	POP	HL
+    2188/    6AF6 : 73                  	LD	(HL),E
+    2189/    6AF7 : 23                  	INC	HL
+    2190/    6AF8 : 72                  	LD	(HL),D
+    2191/    6AF9 : C9                  	RET
+    2192/    6AFA : D5                  A_115:	PUSH	DE
+    2193/    6AFB : 21 00 00            	LD	HL,00H
+    2194/    6AFE : EB                  	EX	DE,HL
+    2195/    6AFF : 2A 12 80            	LD	HL,(V_12H)
+    2196/    6B02 : 19                  	ADD	HL,DE
+    2197/    6B03 : D1                  	POP	DE
+    2198/    6B04 : 6E                  	LD	L,(HL)
+    2199/    6B05 : 26 00               	LD	H,00H
+    2200/    6B07 : 22 1A 80            	LD	(V_1AH),HL
+    2201/    6B0A : 2A 12 80            	LD	HL,(V_12H)
+    2202/    6B0D : EB                  	EX	DE,HL
+    2203/    6B0E : 21 02 00            	LD	HL,02H
+    2204/    6B11 : 19                  	ADD	HL,DE
+    2205/    6B12 : 22 12 80            	LD	(V_12H),HL
+    2206/    6B15 : C3 49 6B            	JP	A_117
+    2207/    6B18 : 2A 12 80            A_113:	LD	HL,(V_12H)
+    2208/    6B1B : EB                  	EX	DE,HL
+    2209/    6B1C : 21 01 00            	LD	HL,01H
+    2210/    6B1F : CD 1E 54            	CALL	C_8A03
+    2211/    6B22 : EB                  	EX	DE,HL
+    2212/    6B23 : 22 12 80            	LD	(V_12H),HL
+    2213/    6B26 : CD 1A 5F            	CALL	A_038
+    2214/    6B29 : D5                  	PUSH	DE
+    2215/    6B2A : D5                  	PUSH	DE
+    2216/    6B2B : 21 01 00            	LD	HL,01H
+    2217/    6B2E : EB                  	EX	DE,HL
+    2218/    6B2F : CD 27 54            	CALL	C_8A5B
+    2219/    6B32 : EB                  	EX	DE,HL
+    2220/    6B33 : D1                  	POP	DE
+    2221/    6B34 : EB                  	EX	DE,HL
+    2222/    6B35 : 2A 12 80            	LD	HL,(V_12H)
+    2223/    6B38 : 19                  	ADD	HL,DE
+    2224/    6B39 : D1                  	POP	DE
+    2225/    6B3A : 6E                  	LD	L,(HL)
+    2226/    6B3B : 26 00               	LD	H,00H
+    2227/    6B3D : EB                  	EX	DE,HL
+    2228/    6B3E : 21 24 00            	LD	HL,024H
+    2229/    6B41 : CD 1E 54            	CALL	C_8A03
+    2230/    6B44 : B3                  	OR	E
+    2231/    6B45 : C2 49 6B            	JP	NZ,A_117
+    2232/    6B48 : C9                  	RET
+    2233/    6B49 : 21 00 00            A_117:	LD	HL,00H
+    2234/    6B4C : EB                  	EX	DE,HL
+    2235/    6B4D : 2A 06 80            	LD	HL,(V_06H)
+    2236/    6B50 : 19                  	ADD	HL,DE
+    2237/    6B51 : E5                  	PUSH	HL
+    2238/    6B52 : 21 21 00            	LD	HL,021H
+    2239/    6B55 : EB                  	EX	DE,HL
+    2240/    6B56 : E1                  	POP	HL
+    2241/    6B57 : 73                  	LD	(HL),E
+    2242/    6B58 : 2A 06 80            	LD	HL,(V_06H)
+    2243/    6B5B : EB                  	EX	DE,HL
+    2244/    6B5C : 21 03 00            	LD	HL,03H
+    2245/    6B5F : 19                  	ADD	HL,DE
+    2246/    6B60 : 22 06 80            	LD	(V_06H),HL
+    2247/    6B63 : D5                  	PUSH	DE
+    2248/    6B64 : 21 01 00            	LD	HL,01H
+    2249/    6B67 : EB                  	EX	DE,HL
+    2250/    6B68 : CD 27 54            	CALL	C_8A5B
+    2251/    6B6B : EB                  	EX	DE,HL
+    2252/    6B6C : D1                  	POP	DE
+    2253/    6B6D : EB                  	EX	DE,HL
+    2254/    6B6E : 2A 06 80            	LD	HL,(V_06H)
+    2255/    6B71 : 19                  	ADD	HL,DE
+    2256/    6B72 : 19                  	ADD	HL,DE
+    2257/    6B73 : E5                  	PUSH	HL
+    2258/    6B74 : 2A 1A 80            	LD	HL,(V_1AH)
+    2259/    6B77 : EB                  	EX	DE,HL
+    2260/    6B78 : E1                  	POP	HL
+    2261/    6B79 : 73                  	LD	(HL),E
+    2262/    6B7A : 23                  	INC	HL
+    2263/    6B7B : 72                  	LD	(HL),D
+    2264/    6B7C : C9                  	RET
+    2265/    6B7D : CD F9 6B            A_126:	CALL	A_129
+    2266/    6B80 : 21 00 00            	LD	HL,00H
+    2267/    6B83 : EB                  	EX	DE,HL
+    2268/    6B84 : 2A 06 80            	LD	HL,(V_06H)
+    2269/    6B87 : 19                  	ADD	HL,DE
+    2270/    6B88 : 19                  	ADD	HL,DE
+    2271/    6B89 : E5                  	PUSH	HL
+    2272/    6B8A : 21 D1 6E            	LD	HL,06ED1H
+    2273/    6B8D : EB                  	EX	DE,HL
+    2274/    6B8E : E1                  	POP	HL
+    2275/    6B8F : 73                  	LD	(HL),E
+    2276/    6B90 : 23                  	INC	HL
+    2277/    6B91 : 72                  	LD	(HL),D
+    2278/    6B92 : 21 01 00            	LD	HL,01H
+    2279/    6B95 : EB                  	EX	DE,HL
+    2280/    6B96 : 2A 06 80            	LD	HL,(V_06H)
+    2281/    6B99 : 19                  	ADD	HL,DE
+    2282/    6B9A : 19                  	ADD	HL,DE
+    2283/    6B9B : E5                  	PUSH	HL
+    2284/    6B9C : 21 26 00            	LD	HL,026H
+    2285/    6B9F : EB                  	EX	DE,HL
+    2286/    6BA0 : E1                  	POP	HL
+    2287/    6BA1 : 73                  	LD	(HL),E
+    2288/    6BA2 : 23                  	INC	HL
+    2289/    6BA3 : 72                  	LD	(HL),D
+    2290/    6BA4 : 2A 06 80            	LD	HL,(V_06H)
+    2291/    6BA7 : EB                  	EX	DE,HL
+    2292/    6BA8 : 21 04 00            	LD	HL,04H
+    2293/    6BAB : 19                  	ADD	HL,DE
+    2294/    6BAC : 22 06 80            	LD	(V_06H),HL
+    2295/    6BAF : C3 8F 6C            	JP	A_130
+    2296/    6BB2 : CD F9 6B            A_128:	CALL	A_129
+    2297/    6BB5 : 21 00 00            	LD	HL,00H
+    2298/    6BB8 : EB                  	EX	DE,HL
+    2299/    6BB9 : 2A 06 80            	LD	HL,(V_06H)
+    2300/    6BBC : 19                  	ADD	HL,DE
+    2301/    6BBD : 19                  	ADD	HL,DE
+    2302/    6BBE : E5                  	PUSH	HL
+    2303/    6BBF : 21 19 D1            	LD	HL,0D119H
+    2304/    6BC2 : EB                  	EX	DE,HL
+    2305/    6BC3 : E1                  	POP	HL
+    2306/    6BC4 : 73                  	LD	(HL),E
+    2307/    6BC5 : 23                  	INC	HL
+    2308/    6BC6 : 72                  	LD	(HL),D
+    2309/    6BC7 : 21 01 00            	LD	HL,01H
+    2310/    6BCA : EB                  	EX	DE,HL
+    2311/    6BCB : 2A 06 80            	LD	HL,(V_06H)
+    2312/    6BCE : 19                  	ADD	HL,DE
+    2313/    6BCF : 19                  	ADD	HL,DE
+    2314/    6BD0 : E5                  	PUSH	HL
+    2315/    6BD1 : 21 7E 23            	LD	HL,0237EH
+    2316/    6BD4 : EB                  	EX	DE,HL
+    2317/    6BD5 : E1                  	POP	HL
+    2318/    6BD6 : 73                  	LD	(HL),E
+    2319/    6BD7 : 23                  	INC	HL
+    2320/    6BD8 : 72                  	LD	(HL),D
+    2321/    6BD9 : 21 02 00            	LD	HL,02H
+    2322/    6BDC : EB                  	EX	DE,HL
+    2323/    6BDD : 2A 06 80            	LD	HL,(V_06H)
+    2324/    6BE0 : 19                  	ADD	HL,DE
+    2325/    6BE1 : 19                  	ADD	HL,DE
+    2326/    6BE2 : E5                  	PUSH	HL
+    2327/    6BE3 : 21 66 6F            	LD	HL,06F66H
+    2328/    6BE6 : EB                  	EX	DE,HL
+    2329/    6BE7 : E1                  	POP	HL
+    2330/    6BE8 : 73                  	LD	(HL),E
+    2331/    6BE9 : 23                  	INC	HL
+    2332/    6BEA : 72                  	LD	(HL),D
+    2333/    6BEB : 2A 06 80            	LD	HL,(V_06H)
+    2334/    6BEE : EB                  	EX	DE,HL
+    2335/    6BEF : 21 06 00            	LD	HL,06H
+    2336/    6BF2 : 19                  	ADD	HL,DE
+    2337/    6BF3 : 22 06 80            	LD	(V_06H),HL
+    2338/    6BF6 : C3 8F 6C            	JP	A_130
+    2339/    6BF9 : 2A 14 80            A_129:	LD	HL,(V_14H)
+    2340/    6BFC : 22 34 80            	LD	(V_34H),HL
+    2341/    6BFF : CD 8E 60            	CALL	A_131
+    2342/    6C02 : 2A 12 80            	LD	HL,(V_12H)
+    2343/    6C05 : EB                  	EX	DE,HL
+    2344/    6C06 : 21 01 00            	LD	HL,01H
+    2345/    6C09 : 19                  	ADD	HL,DE
+    2346/    6C0A : 22 12 80            	LD	(V_12H),HL
+    2347/    6C0D : CD 68 66            	CALL	A_086
+    2348/    6C10 : 21 00 00            	LD	HL,00H
+    2349/    6C13 : EB                  	EX	DE,HL
+    2350/    6C14 : 2A 06 80            	LD	HL,(V_06H)
+    2351/    6C17 : 19                  	ADD	HL,DE
+    2352/    6C18 : E5                  	PUSH	HL
+    2353/    6C19 : 21 2A 00            	LD	HL,02AH
+    2354/    6C1C : EB                  	EX	DE,HL
+    2355/    6C1D : E1                  	POP	HL
+    2356/    6C1E : 73                  	LD	(HL),E
+    2357/    6C1F : 2A 06 80            	LD	HL,(V_06H)
+    2358/    6C22 : EB                  	EX	DE,HL
+    2359/    6C23 : 21 03 00            	LD	HL,03H
+    2360/    6C26 : 19                  	ADD	HL,DE
+    2361/    6C27 : 22 06 80            	LD	(V_06H),HL
+    2362/    6C2A : D5                  	PUSH	DE
+    2363/    6C2B : 21 01 00            	LD	HL,01H
+    2364/    6C2E : EB                  	EX	DE,HL
+    2365/    6C2F : CD 27 54            	CALL	C_8A5B
+    2366/    6C32 : EB                  	EX	DE,HL
+    2367/    6C33 : D1                  	POP	DE
+    2368/    6C34 : EB                  	EX	DE,HL
+    2369/    6C35 : 2A 06 80            	LD	HL,(V_06H)
+    2370/    6C38 : 19                  	ADD	HL,DE
+    2371/    6C39 : 19                  	ADD	HL,DE
+    2372/    6C3A : E5                  	PUSH	HL
+    2373/    6C3B : 2A 34 80            	LD	HL,(V_34H)
+    2374/    6C3E : EB                  	EX	DE,HL
+    2375/    6C3F : E1                  	POP	HL
+    2376/    6C40 : 73                  	LD	(HL),E
+    2377/    6C41 : 23                  	INC	HL
+    2378/    6C42 : 72                  	LD	(HL),D
+    2379/    6C43 : 21 00 00            	LD	HL,00H
+    2380/    6C46 : EB                  	EX	DE,HL
+    2381/    6C47 : 2A 06 80            	LD	HL,(V_06H)
+    2382/    6C4A : 19                  	ADD	HL,DE
+    2383/    6C4B : E5                  	PUSH	HL
+    2384/    6C4C : 21 19 00            	LD	HL,019H
+    2385/    6C4F : EB                  	EX	DE,HL
+    2386/    6C50 : E1                  	POP	HL
+    2387/    6C51 : 73                  	LD	(HL),E
+    2388/    6C52 : 2A 06 80            	LD	HL,(V_06H)
+    2389/    6C55 : EB                  	EX	DE,HL
+    2390/    6C56 : 21 01 00            	LD	HL,01H
+    2391/    6C59 : 19                  	ADD	HL,DE
+    2392/    6C5A : 22 06 80            	LD	(V_06H),HL
+    2393/    6C5D : C9                  	RET
+    2394/    6C5E : 2A 14 80            A_121:	LD	HL,(V_14H)
+    2395/    6C61 : EB                  	EX	DE,HL
+    2396/    6C62 : 21 28 00            	LD	HL,028H
+    2397/    6C65 : CD 1E 54            	CALL	C_8A03
+    2398/    6C68 : B3                  	OR	E
+    2399/    6C69 : CA 6F 6C            	JP	Z,A_132
+    2400/    6C6C : C3 B6 6C            	JP	A_133
+    2401/    6C6F : CD 8E 60            A_132:	CALL	A_131
+    2402/    6C72 : CD 29 66            	CALL	A_134
+    2403/    6C75 : 21 00 00            	LD	HL,00H
+    2404/    6C78 : EB                  	EX	DE,HL
+    2405/    6C79 : 2A 06 80            	LD	HL,(V_06H)
+    2406/    6C7C : 19                  	ADD	HL,DE
+    2407/    6C7D : E5                  	PUSH	HL
+    2408/    6C7E : 21 D1 00            	LD	HL,0D1H
+    2409/    6C81 : EB                  	EX	DE,HL
+    2410/    6C82 : E1                  	POP	HL
+    2411/    6C83 : 73                  	LD	(HL),E
+    2412/    6C84 : 2A 06 80            	LD	HL,(V_06H)
+    2413/    6C87 : EB                  	EX	DE,HL
+    2414/    6C88 : 21 01 00            	LD	HL,01H
+    2415/    6C8B : 19                  	ADD	HL,DE
+    2416/    6C8C : 22 06 80            	LD	(V_06H),HL
+    2417/    6C8F : D5                  A_130:	PUSH	DE
+    2418/    6C90 : 21 00 00            	LD	HL,00H
+    2419/    6C93 : EB                  	EX	DE,HL
+    2420/    6C94 : 2A 12 80            	LD	HL,(V_12H)
+    2421/    6C97 : 19                  	ADD	HL,DE
+    2422/    6C98 : D1                  	POP	DE
+    2423/    6C99 : 6E                  	LD	L,(HL)
+    2424/    6C9A : 26 00               	LD	H,00H
+    2425/    6C9C : EB                  	EX	DE,HL
+    2426/    6C9D : 21 29 00            	LD	HL,029H
+    2427/    6CA0 : CD 1E 54            	CALL	C_8A03
+    2428/    6CA3 : B3                  	OR	E
+    2429/    6CA4 : CA AA 6C            	JP	Z,A_135
+    2430/    6CA7 : C3 14 74            	JP	A_044
+    2431/    6CAA : 2A 12 80            A_135:	LD	HL,(V_12H)
+    2432/    6CAD : EB                  	EX	DE,HL
+    2433/    6CAE : 21 01 00            	LD	HL,01H
+    2434/    6CB1 : 19                  	ADD	HL,DE
+    2435/    6CB2 : 22 12 80            	LD	(V_12H),HL
+    2436/    6CB5 : C9                  	RET
+    2437/    6CB6 : 2A 14 80            A_133:	LD	HL,(V_14H)
+    2438/    6CB9 : EB                  	EX	DE,HL
+    2439/    6CBA : 21 27 00            	LD	HL,027H
+    2440/    6CBD : CD 1E 54            	CALL	C_8A03
+    2441/    6CC0 : B3                  	OR	E
+    2442/    6CC1 : CA C7 6C            	JP	Z,A_136
+    2443/    6CC4 : C3 3E 6D            	JP	A_137
+    2444/    6CC7 : 21 00 00            A_136:	LD	HL,00H
+    2445/    6CCA : EB                  	EX	DE,HL
+    2446/    6CCB : 2A 06 80            	LD	HL,(V_06H)
+    2447/    6CCE : 19                  	ADD	HL,DE
+    2448/    6CCF : 19                  	ADD	HL,DE
+    2449/    6CD0 : E5                  	PUSH	HL
+    2450/    6CD1 : 21 D5 C5            	LD	HL,0C5D5H
+    2451/    6CD4 : EB                  	EX	DE,HL
+    2452/    6CD5 : E1                  	POP	HL
+    2453/    6CD6 : 73                  	LD	(HL),E
+    2454/    6CD7 : 23                  	INC	HL
+    2455/    6CD8 : 72                  	LD	(HL),D
+    2456/    6CD9 : 2A 06 80            	LD	HL,(V_06H)
+    2457/    6CDC : EB                  	EX	DE,HL
+    2458/    6CDD : 21 02 00            	LD	HL,02H
+    2459/    6CE0 : 19                  	ADD	HL,DE
+    2460/    6CE1 : 22 06 80            	LD	(V_06H),HL
+    2461/    6CE4 : CD 4B 69            	CALL	A_067
+    2462/    6CE7 : CD D6 60            	CALL	A_090
+    2463/    6CEA : 21 00 00            	LD	HL,00H
+    2464/    6CED : EB                  	EX	DE,HL
+    2465/    6CEE : 2A 06 80            	LD	HL,(V_06H)
+    2466/    6CF1 : 19                  	ADD	HL,DE
+    2467/    6CF2 : E5                  	PUSH	HL
+    2468/    6CF3 : 21 CD 00            	LD	HL,0CDH
+    2469/    6CF6 : EB                  	EX	DE,HL
+    2470/    6CF7 : E1                  	POP	HL
+    2471/    6CF8 : 73                  	LD	(HL),E
+    2472/    6CF9 : 2A 06 80            	LD	HL,(V_06H)
+    2473/    6CFC : EB                  	EX	DE,HL
+    2474/    6CFD : 21 03 00            	LD	HL,03H
+    2475/    6D00 : 19                  	ADD	HL,DE
+    2476/    6D01 : 22 06 80            	LD	(V_06H),HL
+    2477/    6D04 : D5                  	PUSH	DE
+    2478/    6D05 : 21 01 00            	LD	HL,01H
+    2479/    6D08 : EB                  	EX	DE,HL
+    2480/    6D09 : CD 27 54            	CALL	C_8A5B
+    2481/    6D0C : EB                  	EX	DE,HL
+    2482/    6D0D : D1                  	POP	DE
+    2483/    6D0E : EB                  	EX	DE,HL
+    2484/    6D0F : 2A 06 80            	LD	HL,(V_06H)
+    2485/    6D12 : 19                  	ADD	HL,DE
+    2486/    6D13 : 19                  	ADD	HL,DE
+    2487/    6D14 : E5                  	PUSH	HL
+    2488/    6D15 : 21 18 54            	LD	HL,C_889E
+    2489/    6D18 : EB                  	EX	DE,HL
+    2490/    6D19 : E1                  	POP	HL
+    2491/    6D1A : 73                  	LD	(HL),E
+    2492/    6D1B : 23                  	INC	HL
+    2493/    6D1C : 72                  	LD	(HL),D
+    2494/    6D1D : CD D6 60            	CALL	A_090
+    2495/    6D20 : 21 00 00            	LD	HL,00H
+    2496/    6D23 : EB                  	EX	DE,HL
+    2497/    6D24 : 2A 06 80            	LD	HL,(V_06H)
+    2498/    6D27 : 19                  	ADD	HL,DE
+    2499/    6D28 : 19                  	ADD	HL,DE
+    2500/    6D29 : E5                  	PUSH	HL
+    2501/    6D2A : 21 C1 D1            	LD	HL,0D1C1H
+    2502/    6D2D : EB                  	EX	DE,HL
+    2503/    6D2E : E1                  	POP	HL
+    2504/    6D2F : 73                  	LD	(HL),E
+    2505/    6D30 : 23                  	INC	HL
+    2506/    6D31 : 72                  	LD	(HL),D
+    2507/    6D32 : 2A 06 80            	LD	HL,(V_06H)
+    2508/    6D35 : EB                  	EX	DE,HL
+    2509/    6D36 : 21 02 00            	LD	HL,02H
+    2510/    6D39 : 19                  	ADD	HL,DE
+    2511/    6D3A : 22 06 80            	LD	(V_06H),HL
+    2512/    6D3D : C9                  	RET
+    2513/    6D3E : 2A 14 80            A_137:	LD	HL,(V_14H)
+    2514/    6D41 : EB                  	EX	DE,HL
+    2515/    6D42 : 21 25 00            	LD	HL,025H
+    2516/    6D45 : CD 1E 54            	CALL	C_8A03
+    2517/    6D48 : B3                  	OR	E
+    2518/    6D49 : CA 4F 6D            	JP	Z,A_138
+    2519/    6D4C : C3 ED 6D            	JP	A_139
+    2520/    6D4F : CD 4B 69            A_138:	CALL	A_067
+    2521/    6D52 : 21 00 00            	LD	HL,00H
+    2522/    6D55 : EB                  	EX	DE,HL
+    2523/    6D56 : 2A 06 80            	LD	HL,(V_06H)
+    2524/    6D59 : 19                  	ADD	HL,DE
+    2525/    6D5A : E5                  	PUSH	HL
+    2526/    6D5B : 21 2A 00            	LD	HL,02AH
+    2527/    6D5E : EB                  	EX	DE,HL
+    2528/    6D5F : E1                  	POP	HL
+    2529/    6D60 : 73                  	LD	(HL),E
+    2530/    6D61 : 2A 06 80            	LD	HL,(V_06H)
+    2531/    6D64 : EB                  	EX	DE,HL
+    2532/    6D65 : 21 03 00            	LD	HL,03H
+    2533/    6D68 : 19                  	ADD	HL,DE
+    2534/    6D69 : 22 06 80            	LD	(V_06H),HL
+    2535/    6D6C : D5                  	PUSH	DE
+    2536/    6D6D : 21 01 00            	LD	HL,01H
+    2537/    6D70 : EB                  	EX	DE,HL
+    2538/    6D71 : CD 27 54            	CALL	C_8A5B
+    2539/    6D74 : EB                  	EX	DE,HL
+    2540/    6D75 : D1                  	POP	DE
+    2541/    6D76 : EB                  	EX	DE,HL
+    2542/    6D77 : 2A 06 80            	LD	HL,(V_06H)
+    2543/    6D7A : 19                  	ADD	HL,DE
+    2544/    6D7B : 19                  	ADD	HL,DE
+    2545/    6D7C : E5                  	PUSH	HL
+    2546/    6D7D : 21 4E 80            	LD	HL,V_4EH
+    2547/    6D80 : EB                  	EX	DE,HL
+    2548/    6D81 : E1                  	POP	HL
+    2549/    6D82 : 73                  	LD	(HL),E
+    2550/    6D83 : 23                  	INC	HL
+    2551/    6D84 : 72                  	LD	(HL),D
+    2552/    6D85 : C9                  	RET
+    2553/    6D86 : 21 00 00            A_057:	LD	HL,00H
+    2554/    6D89 : EB                  	EX	DE,HL
+    2555/    6D8A : 2A 06 80            	LD	HL,(V_06H)
+    2556/    6D8D : 19                  	ADD	HL,DE
+    2557/    6D8E : E5                  	PUSH	HL
+    2558/    6D8F : 21 CD 00            	LD	HL,0CDH
+    2559/    6D92 : EB                  	EX	DE,HL
+    2560/    6D93 : E1                  	POP	HL
+    2561/    6D94 : 73                  	LD	(HL),E
+    2562/    6D95 : 2A 06 80            	LD	HL,(V_06H)
+    2563/    6D98 : EB                  	EX	DE,HL
+    2564/    6D99 : 21 03 00            	LD	HL,03H
+    2565/    6D9C : 19                  	ADD	HL,DE
+    2566/    6D9D : 22 06 80            	LD	(V_06H),HL
+    2567/    6DA0 : D5                  	PUSH	DE
+    2568/    6DA1 : 21 01 00            	LD	HL,01H
+    2569/    6DA4 : EB                  	EX	DE,HL
+    2570/    6DA5 : CD 27 54            	CALL	C_8A5B
+    2571/    6DA8 : EB                  	EX	DE,HL
+    2572/    6DA9 : D1                  	POP	DE
+    2573/    6DAA : EB                  	EX	DE,HL
+    2574/    6DAB : 2A 06 80            	LD	HL,(V_06H)
+    2575/    6DAE : 19                  	ADD	HL,DE
+    2576/    6DAF : 19                  	ADD	HL,DE
+    2577/    6DB0 : E5                  	PUSH	HL
+    2578/    6DB1 : 21 06 54            	LD	HL,C_8C96
+    2579/    6DB4 : EB                  	EX	DE,HL
+    2580/    6DB5 : E1                  	POP	HL
+    2581/    6DB6 : 73                  	LD	(HL),E
+    2582/    6DB7 : 23                  	INC	HL
+    2583/    6DB8 : 72                  	LD	(HL),D
+    2584/    6DB9 : 21 00 00            	LD	HL,00H
+    2585/    6DBC : EB                  	EX	DE,HL
+    2586/    6DBD : 2A 06 80            	LD	HL,(V_06H)
+    2587/    6DC0 : 19                  	ADD	HL,DE
+    2588/    6DC1 : E5                  	PUSH	HL
+    2589/    6DC2 : 21 6F 00            	LD	HL,06FH
+    2590/    6DC5 : EB                  	EX	DE,HL
+    2591/    6DC6 : E1                  	POP	HL
+    2592/    6DC7 : 73                  	LD	(HL),E
+    2593/    6DC8 : 2A 06 80            	LD	HL,(V_06H)
+    2594/    6DCB : EB                  	EX	DE,HL
+    2595/    6DCC : 21 03 00            	LD	HL,03H
+    2596/    6DCF : 19                  	ADD	HL,DE
+    2597/    6DD0 : 22 06 80            	LD	(V_06H),HL
+    2598/    6DD3 : D5                  	PUSH	DE
+    2599/    6DD4 : 21 01 00            	LD	HL,01H
+    2600/    6DD7 : EB                  	EX	DE,HL
+    2601/    6DD8 : CD 27 54            	CALL	C_8A5B
+    2602/    6DDB : EB                  	EX	DE,HL
+    2603/    6DDC : D1                  	POP	DE
+    2604/    6DDD : EB                  	EX	DE,HL
+    2605/    6DDE : 2A 06 80            	LD	HL,(V_06H)
+    2606/    6DE1 : 19                  	ADD	HL,DE
+    2607/    6DE2 : 19                  	ADD	HL,DE
+    2608/    6DE3 : E5                  	PUSH	HL
+    2609/    6DE4 : 21 26 00            	LD	HL,026H
+    2610/    6DE7 : EB                  	EX	DE,HL
+    2611/    6DE8 : E1                  	POP	HL
+    2612/    6DE9 : 73                  	LD	(HL),E
+    2613/    6DEA : 23                  	INC	HL
+    2614/    6DEB : 72                  	LD	(HL),D
+    2615/    6DEC : C9                  	RET
+    2616/    6DED : 2A 14 80            A_139:	LD	HL,(V_14H)
+    2617/    6DF0 : EB                  	EX	DE,HL
+    2618/    6DF1 : 21 2D 00            	LD	HL,02DH
+    2619/    6DF4 : CD 1E 54            	CALL	C_8A03
+    2620/    6DF7 : B3                  	OR	E
+    2621/    6DF8 : C2 07 6E            	JP	NZ,A_140
+    2622/    6DFB : CD 58 6E            	CALL	A_141
+    2623/    6DFE : 21 27 54            	LD	HL,C_8A5B
+    2624/    6E01 : 22 14 80            	LD	(V_14H),HL
+    2625/    6E04 : C3 62 6E            	JP	A_142
+    2626/    6E07 : 2A 14 80            A_140:	LD	HL,(V_14H)
+    2627/    6E0A : EB                  	EX	DE,HL
+    2628/    6E0B : 21 2B 00            	LD	HL,02BH
+    2629/    6E0E : CD 1E 54            	CALL	C_8A03
+    2630/    6E11 : B3                  	OR	E
+    2631/    6E12 : C2 21 6E            	JP	NZ,A_143
+    2632/    6E15 : CD 58 6E            	CALL	A_141
+    2633/    6E18 : 21 12 54            	LD	HL,C_8872
+    2634/    6E1B : 22 14 80            	LD	(V_14H),HL
+    2635/    6E1E : C3 62 6E            	JP	A_142
+    2636/    6E21 : 2A 14 80            A_143:	LD	HL,(V_14H)
+    2637/    6E24 : EB                  	EX	DE,HL
+    2638/    6E25 : 21 23 00            	LD	HL,023H
+    2639/    6E28 : CD 1E 54            	CALL	C_8A03
+    2640/    6E2B : B3                  	OR	E
+    2641/    6E2C : C2 3B 6E            	JP	NZ,A_144
+    2642/    6E2F : CD 58 6E            	CALL	A_141
+    2643/    6E32 : 21 15 54            	LD	HL,C_8881
+    2644/    6E35 : 22 14 80            	LD	(V_14H),HL
+    2645/    6E38 : C3 62 6E            	JP	A_142
+    2646/    6E3B : 2A 14 80            A_144:	LD	HL,(V_14H)
+    2647/    6E3E : EB                  	EX	DE,HL
+    2648/    6E3F : 21 3F 00            	LD	HL,03FH
+    2649/    6E42 : CD 1E 54            	CALL	C_8A03
+    2650/    6E45 : B3                  	OR	E
+    2651/    6E46 : C2 55 6E            	JP	NZ,A_145
+    2652/    6E49 : CD 8E 60            	CALL	A_131
+    2653/    6E4C : 21 1B 54            	LD	HL,C_8904
+    2654/    6E4F : 22 14 80            	LD	(V_14H),HL
+    2655/    6E52 : C3 62 6E            	JP	A_142
+    2656/    6E55 : C3 14 74            A_145:	JP	A_044
+    2657/    6E58 : CD 8E 60            A_141:	CALL	A_131
+    2658/    6E5B : CD 4B 69            	CALL	A_067
+    2659/    6E5E : CD D6 60            	CALL	A_090
+    2660/    6E61 : C9                  	RET
+    2661/    6E62 : 21 00 00            A_142:	LD	HL,00H
+    2662/    6E65 : EB                  	EX	DE,HL
+    2663/    6E66 : 2A 06 80            	LD	HL,(V_06H)
+    2664/    6E69 : 19                  	ADD	HL,DE
+    2665/    6E6A : E5                  	PUSH	HL
+    2666/    6E6B : 21 CD 00            	LD	HL,0CDH
+    2667/    6E6E : EB                  	EX	DE,HL
+    2668/    6E6F : E1                  	POP	HL
+    2669/    6E70 : 73                  	LD	(HL),E
+    2670/    6E71 : 2A 06 80            	LD	HL,(V_06H)
+    2671/    6E74 : EB                  	EX	DE,HL
+    2672/    6E75 : 21 03 00            	LD	HL,03H
+    2673/    6E78 : 19                  	ADD	HL,DE
+    2674/    6E79 : 22 06 80            	LD	(V_06H),HL
+    2675/    6E7C : D5                  	PUSH	DE
+    2676/    6E7D : 21 01 00            	LD	HL,01H
+    2677/    6E80 : EB                  	EX	DE,HL
+    2678/    6E81 : CD 27 54            	CALL	C_8A5B
+    2679/    6E84 : EB                  	EX	DE,HL
+    2680/    6E85 : D1                  	POP	DE
+    2681/    6E86 : EB                  	EX	DE,HL
+    2682/    6E87 : 2A 06 80            	LD	HL,(V_06H)
+    2683/    6E8A : 19                  	ADD	HL,DE
+    2684/    6E8B : 19                  	ADD	HL,DE
+    2685/    6E8C : E5                  	PUSH	HL
+    2686/    6E8D : 2A 14 80            	LD	HL,(V_14H)
+    2687/    6E90 : EB                  	EX	DE,HL
+    2688/    6E91 : E1                  	POP	HL
+    2689/    6E92 : 73                  	LD	(HL),E
+    2690/    6E93 : 23                  	INC	HL
+    2691/    6E94 : 72                  	LD	(HL),D
+    2692/    6E95 : 21 00 00            	LD	HL,00H
+    2693/    6E98 : EB                  	EX	DE,HL
+    2694/    6E99 : 2A 06 80            	LD	HL,(V_06H)
+    2695/    6E9C : 19                  	ADD	HL,DE
+    2696/    6E9D : 19                  	ADD	HL,DE
+    2697/    6E9E : E5                  	PUSH	HL
+    2698/    6E9F : 21 EB D1            	LD	HL,0D1EBH
+    2699/    6EA2 : EB                  	EX	DE,HL
+    2700/    6EA3 : E1                  	POP	HL
+    2701/    6EA4 : 73                  	LD	(HL),E
+    2702/    6EA5 : 23                  	INC	HL
+    2703/    6EA6 : 72                  	LD	(HL),D
+    2704/    6EA7 : 2A 06 80            	LD	HL,(V_06H)
+    2705/    6EAA : EB                  	EX	DE,HL
+    2706/    6EAB : 21 02 00            	LD	HL,02H
+    2707/    6EAE : 19                  	ADD	HL,DE
+    2708/    6EAF : 22 06 80            	LD	(V_06H),HL
+    2709/    6EB2 : C9                  	RET
+    2710/    6EB3 : 21 02 00            A_030:	LD	HL,02H
+    2711/    6EB6 : EB                  	EX	DE,HL
+    2712/    6EB7 : D5                  	PUSH	DE
+    2713/    6EB8 : D5                  	PUSH	DE
+    2714/    6EB9 : 21 00 00            	LD	HL,00H
+    2715/    6EBC : EB                  	EX	DE,HL
+    2716/    6EBD : 2A 12 80            	LD	HL,(V_12H)
+    2717/    6EC0 : 19                  	ADD	HL,DE
+    2718/    6EC1 : D1                  	POP	DE
+    2719/    6EC2 : 6E                  	LD	L,(HL)
+    2720/    6EC3 : 26 00               	LD	H,00H
+    2721/    6EC5 : EB                  	EX	DE,HL
+    2722/    6EC6 : 21 41 00            	LD	HL,041H
+    2723/    6EC9 : CD 1E 54            	CALL	C_8A03
+    2724/    6ECC : EB                  	EX	DE,HL
+    2725/    6ECD : D1                  	POP	DE
+    2726/    6ECE : CD 21 54            	CALL	C_8A0F
+    2727/    6ED1 : 2A 0C 80            	LD	HL,(V_0CH)
+    2728/    6ED4 : 19                  	ADD	HL,DE
+    2729/    6ED5 : 22 38 80            	LD	(V_38H),HL
+    2730/    6ED8 : D5                  A_148:	PUSH	DE
+    2731/    6ED9 : D5                  	PUSH	DE
+    2732/    6EDA : 21 01 00            	LD	HL,01H
+    2733/    6EDD : EB                  	EX	DE,HL
+    2734/    6EDE : 2A 12 80            	LD	HL,(V_12H)
+    2735/    6EE1 : 19                  	ADD	HL,DE
+    2736/    6EE2 : D1                  	POP	DE
+    2737/    6EE3 : 6E                  	LD	L,(HL)
+    2738/    6EE4 : 26 00               	LD	H,00H
+    2739/    6EE6 : EB                  	EX	DE,HL
+    2740/    6EE7 : 21 41 00            	LD	HL,041H
+    2741/    6EEA : CD 1E 54            	CALL	C_8A03
+    2742/    6EED : 11 00 00            	LD	DE,00H
+    2743/    6EF0 : FA F4 6E            	JP	M,A_146
+    2744/    6EF3 : 1C                  	INC	E
+    2745/    6EF4 : EB                  A_146:	EX	DE,HL
+    2746/    6EF5 : D1                  	POP	DE
+    2747/    6EF6 : EB                  	EX	DE,HL
+    2748/    6EF7 : D5                  	PUSH	DE
+    2749/    6EF8 : D5                  	PUSH	DE
+    2750/    6EF9 : 21 01 00            	LD	HL,01H
+    2751/    6EFC : EB                  	EX	DE,HL
+    2752/    6EFD : 2A 12 80            	LD	HL,(V_12H)
+    2753/    6F00 : 19                  	ADD	HL,DE
+    2754/    6F01 : D1                  	POP	DE
+    2755/    6F02 : 6E                  	LD	L,(HL)
+    2756/    6F03 : 26 00               	LD	H,00H
+    2757/    6F05 : EB                  	EX	DE,HL
+    2758/    6F06 : 21 5A 00            	LD	HL,05AH
+    2759/    6F09 : EB                  	EX	DE,HL
+    2760/    6F0A : CD 1E 54            	CALL	C_8A03
+    2761/    6F0D : 11 00 00            	LD	DE,00H
+    2762/    6F10 : FA 14 6F            	JP	M,A_147
+    2763/    6F13 : 1C                  	INC	E
+    2764/    6F14 : EB                  A_147:	EX	DE,HL
+    2765/    6F15 : D1                  	POP	DE
+    2766/    6F16 : CD 21 54            	CALL	C_8A0F
+    2767/    6F19 : 7B                  	LD	A,E
+    2768/    6F1A : B2                  	OR	D
+    2769/    6F1B : CA 2C 6F            	JP	Z,A_041
+    2770/    6F1E : 2A 12 80            	LD	HL,(V_12H)
+    2771/    6F21 : EB                  	EX	DE,HL
+    2772/    6F22 : 21 01 00            	LD	HL,01H
+    2773/    6F25 : 19                  	ADD	HL,DE
+    2774/    6F26 : 22 12 80            	LD	(V_12H),HL
+    2775/    6F29 : C3 D8 6E            	JP	A_148
+    2776/    6F2C : D5                  A_041:	PUSH	DE
+    2777/    6F2D : 21 01 00            	LD	HL,01H
+    2778/    6F30 : EB                  	EX	DE,HL
+    2779/    6F31 : 2A 12 80            	LD	HL,(V_12H)
+    2780/    6F34 : 19                  	ADD	HL,DE
+    2781/    6F35 : D1                  	POP	DE
+    2782/    6F36 : 6E                  	LD	L,(HL)
+    2783/    6F37 : 26 00               	LD	H,00H
+    2784/    6F39 : EB                  	EX	DE,HL
+    2785/    6F3A : 21 3D 00            	LD	HL,03DH
+    2786/    6F3D : CD 1E 54            	CALL	C_8A03
+    2787/    6F40 : B3                  	OR	E
+    2788/    6F41 : C2 47 6F            	JP	NZ,A_149
+    2789/    6F44 : C3 45 70            	JP	A_150
+    2790/    6F47 : D5                  A_149:	PUSH	DE
+    2791/    6F48 : 21 01 00            	LD	HL,01H
+    2792/    6F4B : EB                  	EX	DE,HL
+    2793/    6F4C : 2A 12 80            	LD	HL,(V_12H)
+    2794/    6F4F : 19                  	ADD	HL,DE
+    2795/    6F50 : D1                  	POP	DE
+    2796/    6F51 : 6E                  	LD	L,(HL)
+    2797/    6F52 : 26 00               	LD	H,00H
+    2798/    6F54 : EB                  	EX	DE,HL
+    2799/    6F55 : 21 3A 00            	LD	HL,03AH
+    2800/    6F58 : CD 1E 54            	CALL	C_8A03
+    2801/    6F5B : B3                  	OR	E
+    2802/    6F5C : C2 62 6F            	JP	NZ,A_151
+    2803/    6F5F : C3 A0 6F            	JP	A_152
+    2804/    6F62 : D5                  A_151:	PUSH	DE
+    2805/    6F63 : 21 01 00            	LD	HL,01H
+    2806/    6F66 : EB                  	EX	DE,HL
+    2807/    6F67 : 2A 12 80            	LD	HL,(V_12H)
+    2808/    6F6A : 19                  	ADD	HL,DE
+    2809/    6F6B : D1                  	POP	DE
+    2810/    6F6C : 6E                  	LD	L,(HL)
+    2811/    6F6D : 26 00               	LD	H,00H
+    2812/    6F6F : EB                  	EX	DE,HL
+    2813/    6F70 : 21 28 00            	LD	HL,028H
+    2814/    6F73 : CD 1E 54            	CALL	C_8A03
+    2815/    6F76 : B3                  	OR	E
+    2816/    6F77 : C2 7D 6F            	JP	NZ,A_153
+    2817/    6F7A : C3 80 6F            	JP	A_154
+    2818/    6F7D : C3 14 74            A_153:	JP	A_044
+    2819/    6F80 : CD C3 6F            A_154:	CALL	A_155
+    2820/    6F83 : 21 00 00            	LD	HL,00H
+    2821/    6F86 : EB                  	EX	DE,HL
+    2822/    6F87 : 2A 06 80            	LD	HL,(V_06H)
+    2823/    6F8A : 19                  	ADD	HL,DE
+    2824/    6F8B : E5                  	PUSH	HL
+    2825/    6F8C : 21 19 00            	LD	HL,019H
+    2826/    6F8F : EB                  	EX	DE,HL
+    2827/    6F90 : E1                  	POP	HL
+    2828/    6F91 : 73                  	LD	(HL),E
+    2829/    6F92 : 2A 06 80            	LD	HL,(V_06H)
+    2830/    6F95 : EB                  	EX	DE,HL
+    2831/    6F96 : 21 01 00            	LD	HL,01H
+    2832/    6F99 : 19                  	ADD	HL,DE
+    2833/    6F9A : 22 06 80            	LD	(V_06H),HL
+    2834/    6F9D : C3 89 70            	JP	A_156
+    2835/    6FA0 : CD C3 6F            A_152:	CALL	A_155
+    2836/    6FA3 : CD 30 66            	CALL	A_157
+    2837/    6FA6 : 21 00 00            	LD	HL,00H
+    2838/    6FA9 : EB                  	EX	DE,HL
+    2839/    6FAA : 2A 06 80            	LD	HL,(V_06H)
+    2840/    6FAD : 19                  	ADD	HL,DE
+    2841/    6FAE : E5                  	PUSH	HL
+    2842/    6FAF : 21 73 00            	LD	HL,073H
+    2843/    6FB2 : EB                  	EX	DE,HL
+    2844/    6FB3 : E1                  	POP	HL
+    2845/    6FB4 : 73                  	LD	(HL),E
+    2846/    6FB5 : 2A 06 80            	LD	HL,(V_06H)
+    2847/    6FB8 : EB                  	EX	DE,HL
+    2848/    6FB9 : 21 01 00            	LD	HL,01H
+    2849/    6FBC : 19                  	ADD	HL,DE
+    2850/    6FBD : 22 06 80            	LD	(V_06H),HL
+    2851/    6FC0 : C3 EB 71            	JP	A_158
+    2852/    6FC3 : 2A 12 80            A_155:	LD	HL,(V_12H)
+    2853/    6FC6 : EB                  	EX	DE,HL
+    2854/    6FC7 : 21 02 00            	LD	HL,02H
+    2855/    6FCA : 19                  	ADD	HL,DE
+    2856/    6FCB : 22 12 80            	LD	(V_12H),HL
+    2857/    6FCE : CD 68 66            	CALL	A_086
+    2858/    6FD1 : D5                  	PUSH	DE
+    2859/    6FD2 : 21 00 00            	LD	HL,00H
+    2860/    6FD5 : EB                  	EX	DE,HL
+    2861/    6FD6 : 2A 12 80            	LD	HL,(V_12H)
+    2862/    6FD9 : 19                  	ADD	HL,DE
+    2863/    6FDA : D1                  	POP	DE
+    2864/    6FDB : 6E                  	LD	L,(HL)
+    2865/    6FDC : 26 00               	LD	H,00H
+    2866/    6FDE : EB                  	EX	DE,HL
+    2867/    6FDF : 21 29 00            	LD	HL,029H
+    2868/    6FE2 : CD 1E 54            	CALL	C_8A03
+    2869/    6FE5 : B3                  	OR	E
+    2870/    6FE6 : CA EC 6F            	JP	Z,A_159
+    2871/    6FE9 : C3 14 74            	JP	A_044
+    2872/    6FEC : 21 00 00            A_159:	LD	HL,00H
+    2873/    6FEF : EB                  	EX	DE,HL
+    2874/    6FF0 : 2A 06 80            	LD	HL,(V_06H)
+    2875/    6FF3 : 19                  	ADD	HL,DE
+    2876/    6FF4 : E5                  	PUSH	HL
+    2877/    6FF5 : 21 2A 00            	LD	HL,02AH
+    2878/    6FF8 : EB                  	EX	DE,HL
+    2879/    6FF9 : E1                  	POP	HL
+    2880/    6FFA : 73                  	LD	(HL),E
+    2881/    6FFB : 2A 06 80            	LD	HL,(V_06H)
+    2882/    6FFE : EB                  	EX	DE,HL
+    2883/    6FFF : 21 03 00            	LD	HL,03H
+    2884/    7002 : 19                  	ADD	HL,DE
+    2885/    7003 : 22 06 80            	LD	(V_06H),HL
+    2886/    7006 : D5                  	PUSH	DE
+    2887/    7007 : 21 01 00            	LD	HL,01H
+    2888/    700A : EB                  	EX	DE,HL
+    2889/    700B : CD 27 54            	CALL	C_8A5B
+    2890/    700E : EB                  	EX	DE,HL
+    2891/    700F : D1                  	POP	DE
+    2892/    7010 : EB                  	EX	DE,HL
+    2893/    7011 : 2A 06 80            	LD	HL,(V_06H)
+    2894/    7014 : 19                  	ADD	HL,DE
+    2895/    7015 : 19                  	ADD	HL,DE
+    2896/    7016 : E5                  	PUSH	HL
+    2897/    7017 : 2A 38 80            	LD	HL,(V_38H)
+    2898/    701A : EB                  	EX	DE,HL
+    2899/    701B : E1                  	POP	HL
+    2900/    701C : 73                  	LD	(HL),E
+    2901/    701D : 23                  	INC	HL
+    2902/    701E : 72                  	LD	(HL),D
+    2903/    701F : 21 00 00            	LD	HL,00H
+    2904/    7022 : EB                  	EX	DE,HL
+    2905/    7023 : 2A 06 80            	LD	HL,(V_06H)
+    2906/    7026 : 19                  	ADD	HL,DE
+    2907/    7027 : E5                  	PUSH	HL
+    2908/    7028 : 21 19 00            	LD	HL,019H
+    2909/    702B : EB                  	EX	DE,HL
+    2910/    702C : E1                  	POP	HL
+    2911/    702D : 73                  	LD	(HL),E
+    2912/    702E : 2A 06 80            	LD	HL,(V_06H)
+    2913/    7031 : EB                  	EX	DE,HL
+    2914/    7032 : 21 01 00            	LD	HL,01H
+    2915/    7035 : 19                  	ADD	HL,DE
+    2916/    7036 : 22 06 80            	LD	(V_06H),HL
+    2917/    7039 : 2A 12 80            	LD	HL,(V_12H)
+    2918/    703C : EB                  	EX	DE,HL
+    2919/    703D : 21 02 00            	LD	HL,02H
+    2920/    7040 : 19                  	ADD	HL,DE
+    2921/    7041 : 22 12 80            	LD	(V_12H),HL
+    2922/    7044 : C9                  	RET
+    2923/    7045 : 2A 12 80            A_150:	LD	HL,(V_12H)
+    2924/    7048 : EB                  	EX	DE,HL
+    2925/    7049 : 21 02 00            	LD	HL,02H
+    2926/    704C : 19                  	ADD	HL,DE
+    2927/    704D : 22 12 80            	LD	(V_12H),HL
+    2928/    7050 : CD 29 66            	CALL	A_134
+    2929/    7053 : 21 00 00            	LD	HL,00H
+    2930/    7056 : EB                  	EX	DE,HL
+    2931/    7057 : 2A 06 80            	LD	HL,(V_06H)
+    2932/    705A : 19                  	ADD	HL,DE
+    2933/    705B : E5                  	PUSH	HL
+    2934/    705C : 21 22 00            	LD	HL,022H
+    2935/    705F : EB                  	EX	DE,HL
+    2936/    7060 : E1                  	POP	HL
+    2937/    7061 : 73                  	LD	(HL),E
+    2938/    7062 : 2A 06 80            	LD	HL,(V_06H)
+    2939/    7065 : EB                  	EX	DE,HL
+    2940/    7066 : 21 03 00            	LD	HL,03H
+    2941/    7069 : 19                  	ADD	HL,DE
+    2942/    706A : 22 06 80            	LD	(V_06H),HL
+    2943/    706D : D5                  	PUSH	DE
+    2944/    706E : 21 01 00            	LD	HL,01H
+    2945/    7071 : EB                  	EX	DE,HL
+    2946/    7072 : CD 27 54            	CALL	C_8A5B
+    2947/    7075 : EB                  	EX	DE,HL
+    2948/    7076 : D1                  	POP	DE
+    2949/    7077 : EB                  	EX	DE,HL
+    2950/    7078 : 2A 06 80            	LD	HL,(V_06H)
+    2951/    707B : 19                  	ADD	HL,DE
+    2952/    707C : 19                  	ADD	HL,DE
+    2953/    707D : E5                  	PUSH	HL
+    2954/    707E : 2A 38 80            	LD	HL,(V_38H)
+    2955/    7081 : EB                  	EX	DE,HL
+    2956/    7082 : E1                  	POP	HL
+    2957/    7083 : 73                  	LD	(HL),E
+    2958/    7084 : 23                  	INC	HL
+    2959/    7085 : 72                  	LD	(HL),D
+    2960/    7086 : C3 EB 71            	JP	A_158
+    2961/    7089 : CD 30 66            A_156:	CALL	A_157
+    2962/    708C : 21 00 00            	LD	HL,00H
+    2963/    708F : EB                  	EX	DE,HL
+    2964/    7090 : 2A 06 80            	LD	HL,(V_06H)
+    2965/    7093 : 19                  	ADD	HL,DE
+    2966/    7094 : E5                  	PUSH	HL
+    2967/    7095 : 21 73 00            	LD	HL,073H
+    2968/    7098 : EB                  	EX	DE,HL
+    2969/    7099 : E1                  	POP	HL
+    2970/    709A : 73                  	LD	(HL),E
+    2971/    709B : 21 01 00            	LD	HL,01H
+    2972/    709E : EB                  	EX	DE,HL
+    2973/    709F : 2A 06 80            	LD	HL,(V_06H)
+    2974/    70A2 : 19                  	ADD	HL,DE
+    2975/    70A3 : E5                  	PUSH	HL
+    2976/    70A4 : 21 23 00            	LD	HL,023H
+    2977/    70A7 : EB                  	EX	DE,HL
+    2978/    70A8 : E1                  	POP	HL
+    2979/    70A9 : 73                  	LD	(HL),E
+    2980/    70AA : 21 02 00            	LD	HL,02H
+    2981/    70AD : EB                  	EX	DE,HL
+    2982/    70AE : 2A 06 80            	LD	HL,(V_06H)
+    2983/    70B1 : 19                  	ADD	HL,DE
+    2984/    70B2 : E5                  	PUSH	HL
+    2985/    70B3 : 21 72 00            	LD	HL,072H
+    2986/    70B6 : EB                  	EX	DE,HL
+    2987/    70B7 : E1                  	POP	HL
+    2988/    70B8 : 73                  	LD	(HL),E
+    2989/    70B9 : 2A 06 80            	LD	HL,(V_06H)
+    2990/    70BC : EB                  	EX	DE,HL
+    2991/    70BD : 21 03 00            	LD	HL,03H
+    2992/    70C0 : 19                  	ADD	HL,DE
+    2993/    70C1 : 22 06 80            	LD	(V_06H),HL
+    2994/    70C4 : C3 EB 71            	JP	A_158
+    2995/    70C7 : D5                  A_032:	PUSH	DE
+    2996/    70C8 : 21 01 00            	LD	HL,01H
+    2997/    70CB : EB                  	EX	DE,HL
+    2998/    70CC : 2A 12 80            	LD	HL,(V_12H)
+    2999/    70CF : 19                  	ADD	HL,DE
+    3000/    70D0 : D1                  	POP	DE
+    3001/    70D1 : 6E                  	LD	L,(HL)
+    3002/    70D2 : 26 00               	LD	H,00H
+    3003/    70D4 : EB                  	EX	DE,HL
+    3004/    70D5 : 21 3D 00            	LD	HL,03DH
+    3005/    70D8 : CD 1E 54            	CALL	C_8A03
+    3006/    70DB : B3                  	OR	E
+    3007/    70DC : CA E2 70            	JP	Z,A_160
+    3008/    70DF : C3 14 74            	JP	A_044
+    3009/    70E2 : 2A 12 80            A_160:	LD	HL,(V_12H)
+    3010/    70E5 : EB                  	EX	DE,HL
+    3011/    70E6 : 21 02 00            	LD	HL,02H
+    3012/    70E9 : 19                  	ADD	HL,DE
+    3013/    70EA : 22 12 80            	LD	(V_12H),HL
+    3014/    70ED : CD 68 66            	CALL	A_086
+    3015/    70F0 : 2A 06 80            	LD	HL,(V_06H)
+    3016/    70F3 : EB                  	EX	DE,HL
+    3017/    70F4 : 21 01 00            	LD	HL,01H
+    3018/    70F7 : CD 1E 54            	CALL	C_8A03
+    3019/    70FA : EB                  	EX	DE,HL
+    3020/    70FB : 22 06 80            	LD	(V_06H),HL
+    3021/    70FE : D5                  	PUSH	DE
+    3022/    70FF : D5                  	PUSH	DE
+    3023/    7100 : 21 00 00            	LD	HL,00H
+    3024/    7103 : EB                  	EX	DE,HL
+    3025/    7104 : 2A 06 80            	LD	HL,(V_06H)
+    3026/    7107 : 19                  	ADD	HL,DE
+    3027/    7108 : D1                  	POP	DE
+    3028/    7109 : 6E                  	LD	L,(HL)
+    3029/    710A : 26 00               	LD	H,00H
+    3030/    710C : EB                  	EX	DE,HL
+    3031/    710D : 21 1C 00            	LD	HL,01CH
+    3032/    7110 : CD 1E 54            	CALL	C_8A03
+    3033/    7113 : B3                  	OR	E
+    3034/    7114 : 11 00 00            	LD	DE,00H
+    3035/    7117 : C2 1B 71            	JP	NZ,A_161
+    3036/    711A : 1C                  	INC	E
+    3037/    711B : EB                  A_161:	EX	DE,HL
+    3038/    711C : D1                  	POP	DE
+    3039/    711D : EB                  	EX	DE,HL
+    3040/    711E : D5                  	PUSH	DE
+    3041/    711F : D5                  	PUSH	DE
+    3042/    7120 : D5                  	PUSH	DE
+    3043/    7121 : 21 01 00            	LD	HL,01H
+    3044/    7124 : EB                  	EX	DE,HL
+    3045/    7125 : CD 27 54            	CALL	C_8A5B
+    3046/    7128 : EB                  	EX	DE,HL
+    3047/    7129 : D1                  	POP	DE
+    3048/    712A : EB                  	EX	DE,HL
+    3049/    712B : 2A 06 80            	LD	HL,(V_06H)
+    3050/    712E : 19                  	ADD	HL,DE
+    3051/    712F : 19                  	ADD	HL,DE
+    3052/    7130 : D1                  	POP	DE
+    3053/    7131 : 7E                  	LD	A,(HL)
+    3054/    7132 : 23                  	INC	HL
+    3055/    7133 : 66                  	LD	H,(HL)
+    3056/    7134 : 6F                  	LD	L,A
+    3057/    7135 : EB                  	EX	DE,HL
+    3058/    7136 : 2A 06 80            	LD	HL,(V_06H)
+    3059/    7139 : CD 1E 54            	CALL	C_8A03
+    3060/    713C : B3                  	OR	E
+    3061/    713D : 11 00 00            	LD	DE,00H
+    3062/    7140 : C2 44 71            	JP	NZ,A_162
+    3063/    7143 : 1C                  	INC	E
+    3064/    7144 : 21 01 00            A_162:	LD	HL,01H
+    3065/    7147 : 19                  	ADD	HL,DE
+    3066/    7148 : D1                  	POP	DE
+    3067/    7149 : CD 21 54            	CALL	C_8A0F
+    3068/    714C : 7B                  	LD	A,E
+    3069/    714D : B2                  	OR	D
+    3070/    714E : CA 54 71            	JP	Z,A_163
+    3071/    7151 : C3 E5 73            	JP	A_164
+    3072/    7154 : 2A 06 80            A_163:	LD	HL,(V_06H)
+    3073/    7157 : EB                  	EX	DE,HL
+    3074/    7158 : 21 03 00            	LD	HL,03H
+    3075/    715B : 19                  	ADD	HL,DE
+    3076/    715C : 22 06 80            	LD	(V_06H),HL
+    3077/    715F : D5                  	PUSH	DE
+    3078/    7160 : 21 01 00            	LD	HL,01H
+    3079/    7163 : EB                  	EX	DE,HL
+    3080/    7164 : CD 27 54            	CALL	C_8A5B
+    3081/    7167 : EB                  	EX	DE,HL
+    3082/    7168 : D1                  	POP	DE
+    3083/    7169 : EB                  	EX	DE,HL
+    3084/    716A : 2A 06 80            	LD	HL,(V_06H)
+    3085/    716D : 19                  	ADD	HL,DE
+    3086/    716E : 19                  	ADD	HL,DE
+    3087/    716F : E5                  	PUSH	HL
+    3088/    7170 : 21 7B B2            	LD	HL,0B27BH
+    3089/    7173 : EB                  	EX	DE,HL
+    3090/    7174 : E1                  	POP	HL
+    3091/    7175 : 73                  	LD	(HL),E
+    3092/    7176 : 23                  	INC	HL
+    3093/    7177 : 72                  	LD	(HL),D
+    3094/    7178 : 21 CA 00            	LD	HL,0CAH
+    3095/    717B : 22 26 80            	LD	(V_26H),HL
+    3096/    717E : 2A 30 80            	LD	HL,(V_30H)
+    3097/    7181 : EB                  	EX	DE,HL
+    3098/    7182 : 21 01 00            	LD	HL,01H
+    3099/    7185 : 19                  	ADD	HL,DE
+    3100/    7186 : 22 1A 80            	LD	(V_1AH),HL
+    3101/    7189 : CD A2 62            	CALL	A_071
+    3102/    718C : C3 1E 61            	JP	A_043
+    3103/    718F : 2A 12 80            A_034:	LD	HL,(V_12H)
+    3104/    7192 : EB                  	EX	DE,HL
+    3105/    7193 : 21 01 00            	LD	HL,01H
+    3106/    7196 : 19                  	ADD	HL,DE
+    3107/    7197 : 22 12 80            	LD	(V_12H),HL
+    3108/    719A : D5                  	PUSH	DE
+    3109/    719B : 21 00 00            	LD	HL,00H
+    3110/    719E : EB                  	EX	DE,HL
+    3111/    719F : 2A 12 80            	LD	HL,(V_12H)
+    3112/    71A2 : 19                  	ADD	HL,DE
+    3113/    71A3 : D1                  	POP	DE
+    3114/    71A4 : 6E                  	LD	L,(HL)
+    3115/    71A5 : 26 00               	LD	H,00H
+    3116/    71A7 : EB                  	EX	DE,HL
+    3117/    71A8 : 21 3D 00            	LD	HL,03DH
+    3118/    71AB : CD 1E 54            	CALL	C_8A03
+    3119/    71AE : B3                  	OR	E
+    3120/    71AF : C2 B5 71            	JP	NZ,A_165
+    3121/    71B2 : C3 8A 72            	JP	A_166
+    3122/    71B5 : 21 00 00            A_165:	LD	HL,00H
+    3123/    71B8 : EB                  	EX	DE,HL
+    3124/    71B9 : 2A 06 80            	LD	HL,(V_06H)
+    3125/    71BC : 19                  	ADD	HL,DE
+    3126/    71BD : E5                  	PUSH	HL
+    3127/    71BE : 21 11 00            	LD	HL,011H
+    3128/    71C1 : EB                  	EX	DE,HL
+    3129/    71C2 : E1                  	POP	HL
+    3130/    71C3 : 73                  	LD	(HL),E
+    3131/    71C4 : 2A 06 80            	LD	HL,(V_06H)
+    3132/    71C7 : EB                  	EX	DE,HL
+    3133/    71C8 : 21 03 00            	LD	HL,03H
+    3134/    71CB : 19                  	ADD	HL,DE
+    3135/    71CC : 22 06 80            	LD	(V_06H),HL
+    3136/    71CF : D5                  	PUSH	DE
+    3137/    71D0 : 21 01 00            	LD	HL,01H
+    3138/    71D3 : EB                  	EX	DE,HL
+    3139/    71D4 : CD 27 54            	CALL	C_8A5B
+    3140/    71D7 : EB                  	EX	DE,HL
+    3141/    71D8 : D1                  	POP	DE
+    3142/    71D9 : EB                  	EX	DE,HL
+    3143/    71DA : 2A 06 80            	LD	HL,(V_06H)
+    3144/    71DD : 19                  	ADD	HL,DE
+    3145/    71DE : 19                  	ADD	HL,DE
+    3146/    71DF : E5                  	PUSH	HL
+    3147/    71E0 : 21 00 00            	LD	HL,00H
+    3148/    71E3 : EB                  	EX	DE,HL
+    3149/    71E4 : E1                  	POP	HL
+    3150/    71E5 : 73                  	LD	(HL),E
+    3151/    71E6 : 23                  	INC	HL
+    3152/    71E7 : 72                  	LD	(HL),D
+    3153/    71E8 : C3 14 72            	JP	A_167
+    3154/    71EB : D5                  A_158:	PUSH	DE
+    3155/    71EC : 21 00 00            	LD	HL,00H
+    3156/    71EF : EB                  	EX	DE,HL
+    3157/    71F0 : 2A 12 80            	LD	HL,(V_12H)
+    3158/    71F3 : 19                  	ADD	HL,DE
+    3159/    71F4 : D1                  	POP	DE
+    3160/    71F5 : 6E                  	LD	L,(HL)
+    3161/    71F6 : 26 00               	LD	H,00H
+    3162/    71F8 : EB                  	EX	DE,HL
+    3163/    71F9 : 21 2C 00            	LD	HL,02CH
+    3164/    71FC : CD 1E 54            	CALL	C_8A03
+    3165/    71FF : B3                  	OR	E
+    3166/    7200 : CA 06 72            	JP	Z,A_168
+    3167/    7203 : C3 1E 61            	JP	A_043
+    3168/    7206 : 2A 12 80            A_168:	LD	HL,(V_12H)
+    3169/    7209 : EB                  	EX	DE,HL
+    3170/    720A : 21 01 00            	LD	HL,01H
+    3171/    720D : 19                  	ADD	HL,DE
+    3172/    720E : 22 12 80            	LD	(V_12H),HL
+    3173/    7211 : CD 68 66            	CALL	A_086
+    3174/    7214 : 21 00 00            A_167:	LD	HL,00H
+    3175/    7217 : EB                  	EX	DE,HL
+    3176/    7218 : 2A 06 80            	LD	HL,(V_06H)
+    3177/    721B : 19                  	ADD	HL,DE
+    3178/    721C : E5                  	PUSH	HL
+    3179/    721D : 21 CD 00            	LD	HL,0CDH
+    3180/    7220 : EB                  	EX	DE,HL
+    3181/    7221 : E1                  	POP	HL
+    3182/    7222 : 73                  	LD	(HL),E
+    3183/    7223 : 2A 06 80            	LD	HL,(V_06H)
+    3184/    7226 : EB                  	EX	DE,HL
+    3185/    7227 : 21 03 00            	LD	HL,03H
+    3186/    722A : 19                  	ADD	HL,DE
+    3187/    722B : 22 06 80            	LD	(V_06H),HL
+    3188/    722E : D5                  	PUSH	DE
+    3189/    722F : 21 01 00            	LD	HL,01H
+    3190/    7232 : EB                  	EX	DE,HL
+    3191/    7233 : CD 27 54            	CALL	C_8A5B
+    3192/    7236 : EB                  	EX	DE,HL
+    3193/    7237 : D1                  	POP	DE
+    3194/    7238 : EB                  	EX	DE,HL
+    3195/    7239 : 2A 06 80            	LD	HL,(V_06H)
+    3196/    723C : 19                  	ADD	HL,DE
+    3197/    723D : 19                  	ADD	HL,DE
+    3198/    723E : E5                  	PUSH	HL
+    3199/    723F : 2A 06 80            	LD	HL,(V_06H)
+    3200/    7242 : EB                  	EX	DE,HL
+    3201/    7243 : E1                  	POP	HL
+    3202/    7244 : 73                  	LD	(HL),E
+    3203/    7245 : 23                  	INC	HL
+    3204/    7246 : 72                  	LD	(HL),D
+    3205/    7247 : 21 00 00            	LD	HL,00H
+    3206/    724A : EB                  	EX	DE,HL
+    3207/    724B : 2A 06 80            	LD	HL,(V_06H)
+    3208/    724E : 19                  	ADD	HL,DE
+    3209/    724F : E5                  	PUSH	HL
+    3210/    7250 : 21 D5 00            	LD	HL,0D5H
+    3211/    7253 : EB                  	EX	DE,HL
+    3212/    7254 : E1                  	POP	HL
+    3213/    7255 : 73                  	LD	(HL),E
+    3214/    7256 : 2A 06 80            	LD	HL,(V_06H)
+    3215/    7259 : EB                  	EX	DE,HL
+    3216/    725A : 21 01 00            	LD	HL,01H
+    3217/    725D : 19                  	ADD	HL,DE
+    3218/    725E : 22 06 80            	LD	(V_06H),HL
+    3219/    7261 : C3 1E 61            	JP	A_043
+    3220/    7264 : 2A 12 80            	LD	HL,(V_12H)
+    3221/    7267 : EB                  	EX	DE,HL
+    3222/    7268 : 21 01 00            	LD	HL,01H
+    3223/    726B : 19                  	ADD	HL,DE
+    3224/    726C : 22 12 80            	LD	(V_12H),HL
+    3225/    726F : D5                  	PUSH	DE
+    3226/    7270 : 21 00 00            	LD	HL,00H
+    3227/    7273 : EB                  	EX	DE,HL
+    3228/    7274 : 2A 12 80            	LD	HL,(V_12H)
+    3229/    7277 : 19                  	ADD	HL,DE
+    3230/    7278 : D1                  	POP	DE
+    3231/    7279 : 6E                  	LD	L,(HL)
+    3232/    727A : 26 00               	LD	H,00H
+    3233/    727C : EB                  	EX	DE,HL
+    3234/    727D : 21 3D 00            	LD	HL,03DH
+    3235/    7280 : CD 1E 54            	CALL	C_8A03
+    3236/    7283 : B3                  	OR	E
+    3237/    7284 : C2 8A 72            	JP	NZ,A_166
+    3238/    7287 : C3 8A 72            	JP	A_166
+    3239/    728A : D5                  A_166:	PUSH	DE
+    3240/    728B : 21 01 00            	LD	HL,01H
+    3241/    728E : EB                  	EX	DE,HL
+    3242/    728F : 2A 12 80            	LD	HL,(V_12H)
+    3243/    7292 : 19                  	ADD	HL,DE
+    3244/    7293 : D1                  	POP	DE
+    3245/    7294 : 6E                  	LD	L,(HL)
+    3246/    7295 : 26 00               	LD	H,00H
+    3247/    7297 : 22 38 80            	LD	(V_38H),HL
+    3248/    729A : 2A 12 80            	LD	HL,(V_12H)
+    3249/    729D : EB                  	EX	DE,HL
+    3250/    729E : 21 01 00            	LD	HL,01H
+    3251/    72A1 : 19                  	ADD	HL,DE
+    3252/    72A2 : 22 12 80            	LD	(V_12H),HL
+    3253/    72A5 : CD 68 66            	CALL	A_086
+    3254/    72A8 : CD D6 60            	CALL	A_090
+    3255/    72AB : D5                  	PUSH	DE
+    3256/    72AC : 2A 38 80            	LD	HL,(V_38H)
+    3257/    72AF : EB                  	EX	DE,HL
+    3258/    72B0 : 21 41 00            	LD	HL,041H
+    3259/    72B3 : CD 1E 54            	CALL	C_8A03
+    3260/    72B6 : 11 00 00            	LD	DE,00H
+    3261/    72B9 : FA BD 72            	JP	M,A_169
+    3262/    72BC : 1C                  	INC	E
+    3263/    72BD : EB                  A_169:	EX	DE,HL
+    3264/    72BE : D1                  	POP	DE
+    3265/    72BF : EB                  	EX	DE,HL
+    3266/    72C0 : D5                  	PUSH	DE
+    3267/    72C1 : 2A 38 80            	LD	HL,(V_38H)
+    3268/    72C4 : EB                  	EX	DE,HL
+    3269/    72C5 : 21 5A 00            	LD	HL,05AH
+    3270/    72C8 : EB                  	EX	DE,HL
+    3271/    72C9 : CD 1E 54            	CALL	C_8A03
+    3272/    72CC : 11 00 00            	LD	DE,00H
+    3273/    72CF : FA D3 72            	JP	M,A_170
+    3274/    72D2 : 1C                  	INC	E
+    3275/    72D3 : EB                  A_170:	EX	DE,HL
+    3276/    72D4 : D1                  	POP	DE
+    3277/    72D5 : CD 21 54            	CALL	C_8A0F
+    3278/    72D8 : 7B                  	LD	A,E
+    3279/    72D9 : B2                  	OR	D
+    3280/    72DA : CA 25 73            	JP	Z,A_171
+    3281/    72DD : 21 00 00            	LD	HL,00H
+    3282/    72E0 : EB                  	EX	DE,HL
+    3283/    72E1 : 2A 06 80            	LD	HL,(V_06H)
+    3284/    72E4 : 19                  	ADD	HL,DE
+    3285/    72E5 : E5                  	PUSH	HL
+    3286/    72E6 : 21 22 00            	LD	HL,022H
+    3287/    72E9 : EB                  	EX	DE,HL
+    3288/    72EA : E1                  	POP	HL
+    3289/    72EB : 73                  	LD	(HL),E
+    3290/    72EC : 2A 06 80            	LD	HL,(V_06H)
+    3291/    72EF : EB                  	EX	DE,HL
+    3292/    72F0 : 21 03 00            	LD	HL,03H
+    3293/    72F3 : 19                  	ADD	HL,DE
+    3294/    72F4 : 22 06 80            	LD	(V_06H),HL
+    3295/    72F7 : D5                  	PUSH	DE
+    3296/    72F8 : 21 01 00            	LD	HL,01H
+    3297/    72FB : EB                  	EX	DE,HL
+    3298/    72FC : CD 27 54            	CALL	C_8A5B
+    3299/    72FF : EB                  	EX	DE,HL
+    3300/    7300 : D1                  	POP	DE
+    3301/    7301 : EB                  	EX	DE,HL
+    3302/    7302 : 2A 06 80            	LD	HL,(V_06H)
+    3303/    7305 : 19                  	ADD	HL,DE
+    3304/    7306 : 19                  	ADD	HL,DE
+    3305/    7307 : E5                  	PUSH	HL
+    3306/    7308 : 21 02 00            	LD	HL,02H
+    3307/    730B : EB                  	EX	DE,HL
+    3308/    730C : D5                  	PUSH	DE
+    3309/    730D : 2A 38 80            	LD	HL,(V_38H)
+    3310/    7310 : EB                  	EX	DE,HL
+    3311/    7311 : 21 41 00            	LD	HL,041H
+    3312/    7314 : CD 1E 54            	CALL	C_8A03
+    3313/    7317 : EB                  	EX	DE,HL
+    3314/    7318 : D1                  	POP	DE
+    3315/    7319 : CD 21 54            	CALL	C_8A0F
+    3316/    731C : 2A 0C 80            	LD	HL,(V_0CH)
+    3317/    731F : 19                  	ADD	HL,DE
+    3318/    7320 : EB                  	EX	DE,HL
+    3319/    7321 : E1                  	POP	HL
+    3320/    7322 : 73                  	LD	(HL),E
+    3321/    7323 : 23                  	INC	HL
+    3322/    7324 : 72                  	LD	(HL),D
+    3323/    7325 : 21 00 00            A_171:	LD	HL,00H
+    3324/    7328 : EB                  	EX	DE,HL
+    3325/    7329 : 2A 06 80            	LD	HL,(V_06H)
+    3326/    732C : 19                  	ADD	HL,DE
+    3327/    732D : 19                  	ADD	HL,DE
+    3328/    732E : E5                  	PUSH	HL
+    3329/    732F : 21 D1 D5            	LD	HL,0D5D1H
+    3330/    7332 : EB                  	EX	DE,HL
+    3331/    7333 : E1                  	POP	HL
+    3332/    7334 : 73                  	LD	(HL),E
+    3333/    7335 : 23                  	INC	HL
+    3334/    7336 : 72                  	LD	(HL),D
+    3335/    7337 : 21 02 00            	LD	HL,02H
+    3336/    733A : EB                  	EX	DE,HL
+    3337/    733B : 2A 06 80            	LD	HL,(V_06H)
+    3338/    733E : 19                  	ADD	HL,DE
+    3339/    733F : E5                  	PUSH	HL
+    3340/    7340 : 21 CD 00            	LD	HL,0CDH
+    3341/    7343 : EB                  	EX	DE,HL
+    3342/    7344 : E1                  	POP	HL
+    3343/    7345 : 73                  	LD	(HL),E
+    3344/    7346 : 2A 06 80            	LD	HL,(V_06H)
+    3345/    7349 : EB                  	EX	DE,HL
+    3346/    734A : 21 05 00            	LD	HL,05H
+    3347/    734D : 19                  	ADD	HL,DE
+    3348/    734E : 22 06 80            	LD	(V_06H),HL
+    3349/    7351 : D5                  	PUSH	DE
+    3350/    7352 : 21 01 00            	LD	HL,01H
+    3351/    7355 : EB                  	EX	DE,HL
+    3352/    7356 : CD 27 54            	CALL	C_8A5B
+    3353/    7359 : EB                  	EX	DE,HL
+    3354/    735A : D1                  	POP	DE
+    3355/    735B : EB                  	EX	DE,HL
+    3356/    735C : 2A 06 80            	LD	HL,(V_06H)
+    3357/    735F : 19                  	ADD	HL,DE
+    3358/    7360 : 19                  	ADD	HL,DE
+    3359/    7361 : E5                  	PUSH	HL
+    3360/    7362 : 21 1E 54            	LD	HL,C_8A03
+    3361/    7365 : EB                  	EX	DE,HL
+    3362/    7366 : E1                  	POP	HL
+    3363/    7367 : 73                  	LD	(HL),E
+    3364/    7368 : 23                  	INC	HL
+    3365/    7369 : 72                  	LD	(HL),D
+    3366/    736A : 21 00 00            	LD	HL,00H
+    3367/    736D : EB                  	EX	DE,HL
+    3368/    736E : 2A 06 80            	LD	HL,(V_06H)
+    3369/    7371 : 19                  	ADD	HL,DE
+    3370/    7372 : E5                  	PUSH	HL
+    3371/    7373 : 21 D1 00            	LD	HL,0D1H
+    3372/    7376 : EB                  	EX	DE,HL
+    3373/    7377 : E1                  	POP	HL
+    3374/    7378 : 73                  	LD	(HL),E
+    3375/    7379 : 2A 06 80            	LD	HL,(V_06H)
+    3376/    737C : EB                  	EX	DE,HL
+    3377/    737D : 21 01 00            	LD	HL,01H
+    3378/    7380 : 19                  	ADD	HL,DE
+    3379/    7381 : 22 06 80            	LD	(V_06H),HL
+    3380/    7384 : 21 00 00            	LD	HL,00H
+    3381/    7387 : EB                  	EX	DE,HL
+    3382/    7388 : 2A 06 80            	LD	HL,(V_06H)
+    3383/    738B : 19                  	ADD	HL,DE
+    3384/    738C : E5                  	PUSH	HL
+    3385/    738D : 21 E1 00            	LD	HL,0E1H
+    3386/    7390 : EB                  	EX	DE,HL
+    3387/    7391 : E1                  	POP	HL
+    3388/    7392 : 73                  	LD	(HL),E
+    3389/    7393 : 21 01 00            	LD	HL,01H
+    3390/    7396 : EB                  	EX	DE,HL
+    3391/    7397 : 2A 06 80            	LD	HL,(V_06H)
+    3392/    739A : 19                  	ADD	HL,DE
+    3393/    739B : E5                  	PUSH	HL
+    3394/    739C : 21 FA 00            	LD	HL,0FAH
+    3395/    739F : EB                  	EX	DE,HL
+    3396/    73A0 : E1                  	POP	HL
+    3397/    73A1 : 73                  	LD	(HL),E
+    3398/    73A2 : 21 01 00            	LD	HL,01H
+    3399/    73A5 : EB                  	EX	DE,HL
+    3400/    73A6 : 2A 06 80            	LD	HL,(V_06H)
+    3401/    73A9 : 19                  	ADD	HL,DE
+    3402/    73AA : 19                  	ADD	HL,DE
+    3403/    73AB : E5                  	PUSH	HL
+    3404/    73AC : 2A 06 80            	LD	HL,(V_06H)
+    3405/    73AF : EB                  	EX	DE,HL
+    3406/    73B0 : 21 06 00            	LD	HL,06H
+    3407/    73B3 : 19                  	ADD	HL,DE
+    3408/    73B4 : EB                  	EX	DE,HL
+    3409/    73B5 : E1                  	POP	HL
+    3410/    73B6 : 73                  	LD	(HL),E
+    3411/    73B7 : 23                  	INC	HL
+    3412/    73B8 : 72                  	LD	(HL),D
+    3413/    73B9 : 21 04 00            	LD	HL,04H
+    3414/    73BC : EB                  	EX	DE,HL
+    3415/    73BD : 2A 06 80            	LD	HL,(V_06H)
+    3416/    73C0 : 19                  	ADD	HL,DE
+    3417/    73C1 : E5                  	PUSH	HL
+    3418/    73C2 : 21 E5 00            	LD	HL,0E5H
+    3419/    73C5 : EB                  	EX	DE,HL
+    3420/    73C6 : E1                  	POP	HL
+    3421/    73C7 : 73                  	LD	(HL),E
+    3422/    73C8 : 21 05 00            	LD	HL,05H
+    3423/    73CB : EB                  	EX	DE,HL
+    3424/    73CC : 2A 06 80            	LD	HL,(V_06H)
+    3425/    73CF : 19                  	ADD	HL,DE
+    3426/    73D0 : E5                  	PUSH	HL
+    3427/    73D1 : 21 E9 00            	LD	HL,0E9H
+    3428/    73D4 : EB                  	EX	DE,HL
+    3429/    73D5 : E1                  	POP	HL
+    3430/    73D6 : 73                  	LD	(HL),E
+    3431/    73D7 : 2A 06 80            	LD	HL,(V_06H)
+    3432/    73DA : EB                  	EX	DE,HL
+    3433/    73DB : 21 06 00            	LD	HL,06H
+    3434/    73DE : 19                  	ADD	HL,DE
+    3435/    73DF : 22 06 80            	LD	(V_06H),HL
+    3436/    73E2 : C3 1E 61            	JP	A_043
+    3437/    73E5 : 2A 06 80            A_164:	LD	HL,(V_06H)
+    3438/    73E8 : EB                  	EX	DE,HL
+    3439/    73E9 : 21 06 00            	LD	HL,06H
+    3440/    73EC : CD 1E 54            	CALL	C_8A03
+    3441/    73EF : EB                  	EX	DE,HL
+    3442/    73F0 : 22 06 80            	LD	(V_06H),HL
+    3443/    73F3 : D5                  	PUSH	DE
+    3444/    73F4 : 21 03 00            	LD	HL,03H
+    3445/    73F7 : EB                  	EX	DE,HL
+    3446/    73F8 : 2A 06 80            	LD	HL,(V_06H)
+    3447/    73FB : 19                  	ADD	HL,DE
+    3448/    73FC : D1                  	POP	DE
+    3449/    73FD : 6E                  	LD	L,(HL)
+    3450/    73FE : 26 00               	LD	H,00H
+    3451/    7400 : 22 26 80            	LD	(V_26H),HL
+    3452/    7403 : 2A 30 80            	LD	HL,(V_30H)
+    3453/    7406 : EB                  	EX	DE,HL
+    3454/    7407 : 21 01 00            	LD	HL,01H
+    3455/    740A : 19                  	ADD	HL,DE
+    3456/    740B : 22 1A 80            	LD	(V_1AH),HL
+    3457/    740E : CD A2 62            	CALL	A_071
+    3458/    7411 : C3 1E 61            	JP	A_043
+    3459/    7414 :                     
+    3460/    7414 : 21 90 74            A_044:	LD	HL,STR_12
+    3461/    7417 : CD 0F 54            	CALL	C_8785
+    3462/    741A : CD 3C 54            	CALL	C_8C83
+    3463/    741D : C3 03 54            	JP	C_8603
+    3464/    7420 :                     
+    3465/    7420 : 2A 2A 20 20 47 41   STR_1:	db	"**  GAME80 COMPILER **",00H
+             7426 : 4D 45 38 30 20 43 
+             742C : 4F 4D 50 49 4C 45 
+             7432 : 52 20 2A 2A 00    
+    3466/    7437 : 47 41 4D 45 20 50   STR_2:	DB	"GAME PROGRAM FROM($",00H
+             743D : 52 4F 47 52 41 4D 
+             7443 : 20 46 52 4F 4D 28 
+             7449 : 24 00             
+    3467/    744B : 53 54 41 52 54 20   STR_3:	DB	"START ADRRESS($",00H
+             7451 : 41 44 52 52 45 53 
+             7457 : 53 28 24 00       
+    3468/    745B : 57 4F 52 4B 20 41   STR_4:	db	"WORK AREA FROM($",00h
+             7461 : 52 45 41 20 46 52 
+             7467 : 4F 4D 28 24 00    
+    3469/    746C : 29 20 3D 20 00      STR_5:	db	") = ", 00h
+    3470/    7471 : 50 52 4F 47 52 41   STR_6:	DB	"PROGRAM SIZE: ",00H
+             7477 : 4D 20 53 49 5A 45 
+             747D : 3A 20 00          
+    3471/    7480 : 28 00               STR_7:	db	'(',00h
+    3472/    7482 : 2D 00               STR_8:	db	'-', 00h
+    3473/    7484 : 29 00               STR_9:	db	')',00h
+    3474/    7486 :                     
+    3475/    7486 : 45 4E 44 00         STR_10:	db	"END",00h
+    3476/    748A : 20 20 20 20 20 00   STR_11:	db	"     ",00h
+    3477/    7490 : 45 52 52 4F 52 00   STR_12:	db	"ERROR",00h
+    3478/    7496 :                     
+    3479/    7496 : FF FF FF FF FF FF   	db	($ & 0FF00H)+100H-$ dup(0FFH)
+             749C : FF FF FF FF FF FF 
+             74A2 : FF FF FF FF FF FF 
+             74A8 : FF FF FF FF FF FF 
+             74AE : FF FF FF FF FF FF 
+             74B4 : FF FF FF FF FF FF 
+             74BA : FF FF FF FF FF FF 
+             74C0 : FF FF FF FF FF FF 
+             74C6 : FF FF FF FF FF FF 
+             74CC : FF FF FF FF FF FF 
+             74D2 : FF FF FF FF FF FF 
+             74D8 : FF FF FF FF FF FF 
+             74DE : FF FF FF FF FF FF 
+             74E4 : FF FF FF FF FF FF 
+             74EA : FF FF FF FF FF FF 
+             74F0 : FF FF FF FF FF FF 
+             74F6 : FF FF FF FF FF FF 
+             74FC : FF FF FF FF       
+    3480/    7500 :                     
+    3481/    8000 :                     	org	GAME_WORK
+    3482/    8000 :                     
+    3483/    8000 :                     	ds	6
+    3484/    8006 :                     V_06H	ds	2
+    3485/    8008 :                     	ds	4
+    3486/    800C :                     V_0CH	ds	2
+    3487/    800E :                     V_0EH	ds	2
+    3488/    8010 :                     	ds	2
+    3489/    8012 :                     V_12H	ds	2
+    3490/    8014 :                     V_14H	ds	2
+    3491/    8016 :                     	ds	2
+    3492/    8018 :                     V_18H	ds	2
+    3493/    801A :                     V_1AH	ds	2
+    3494/    801C :                     V_1CH	ds	2
+    3495/    801E :                     	ds	2
+    3496/    8020 :                     V_20H	ds	2
+    3497/    8022 :                     V_22H	ds	2
+    3498/    8024 :                     V_24H	ds	2
+    3499/    8026 :                     V_26H	ds	2
+    3500/    8028 :                     	ds	2
+    3501/    802A :                     V_2AH	ds	2
+    3502/    802C :                     	ds	4
+    3503/    8030 :                     V_30H	ds	2
+    3504/    8032 :                     	ds	2
+    3505/    8034 :                     V_34H	ds	2
+    3506/    8036 :                     	ds	2
+    3507/    8038 :                     V_38H	ds	2
+    3508/    803A :                     	ds	14h
+    3509/    804E :                     V_4EH	ds	2
+    3510/    8050 :                     V_50H	ds	2
+    3511/    8052 :                     V_52H	ds	2
+    3512/    8054 :                     	ds	0ach
+    3513/    8100 :                     PROG_START:
+    3514/    8100 :                     
+    3515/    8100 :                     	END
+ AS V1.42 Beta [Bld 227] - Source File game80c.asm - Page 2 - 1/17/2023 21:56:29
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+*A_001 :                       5B98 C |  A_003 :                       5C51 C |
+*A_004 :                       5C10 C | *A_006 :                       5C23 C |
+*A_008 :                       5C3C C | *A_010 :                       5C45 C |
+ A_012 :                       5CF3 C |  A_013 :                       5D6F C |
+ A_014 :                       5D9C C |  A_015 :                       616D C |
+ A_016 :                       5DC3 C |  A_017 :                       619D C |
+ A_018 :                       5DDA C |  A_019 :                       5DEB C |
+ A_020 :                       61C9 C |  A_021 :                       5E0D C |
+ A_022 :                       65F3 C |  A_023 :                       5E1E C |
+ A_024 :                       6365 C |  A_025 :                       5E2F C |
+ A_026 :                       6473 C |  A_027 :                       5E41 C |
+ A_028 :                       5E57 C |  A_029 :                       5E64 C |
+ A_030 :                       6EB3 C |  A_031 :                       5E75 C |
+ A_032 :                       70C7 C |  A_033 :                       5E86 C |
+ A_034 :                       718F C |  A_035 :                       5EA8 C |
+ A_036 :                       65F0 C |  A_037 :                       5ECD C |
+ A_038 :                       5F1A C |  A_039 :                       5EEF C |
+ A_040 :                       5F06 C |  A_041 :                       6F2C C |
+ A_042 :                       5F17 C |  A_043 :                       611E C |
+ A_044 :                       7414 C |  A_045 :                       5F46 C |
+ A_046 :                       5FAF C |  A_047 :                       5F70 C |
+ A_048 :                       5F86 C |  A_049 :                       5F90 C |
+ A_050 :                       5FDE C |  A_051 :                       600A C |
+ A_052 :                       602A C |  A_053 :                       6040 C |
+ A_054 :                       604C C |  A_055 :                       606B C |
+ A_056 :                       608B C |  A_057 :                       6D86 C |
+ A_058 :                       60D5 C |  A_059 :                       611D C |
+ A_060 :                       6144 C |  A_061 :                       5C57 C |
+ A_062 :                       616A C |  A_063 :                       619A C |
+ A_064 :                       61B8 C |  A_065 :                       61F1 C |
+ A_066 :                       6270 C |  A_067 :                       694B C |
+ A_068 :                       626D C |  A_069 :                       622A C |
+ A_070 :                       629F C |  A_071 :                       62A2 C |
+ A_072 :                       62CB C |  A_073 :                       62DE C |
+ A_074 :                       6308 C |  A_076 :                       6316 C |
+ A_079 :                       6390 C |  A_080 :                       63DD C |
+ A_081 :                       63EB C |  A_082 :                       648E C |
+ A_083 :                       64A2 C |  A_084 :                       64BD C |
+ A_085 :                       6533 C |  A_086 :                       6668 C |
+ A_087 :                       654E C |  A_088 :                       6562 C |
+ A_089 :                       657D C |  A_090 :                       60D6 C |
+ A_091 :                       66BA C |  A_092 :                       6812 C |
+ A_093 :                       66D4 C |  A_094 :                       66EE C |
+ A_095 :                       6708 C |  A_096 :                       6862 C |
+ A_097 :                       6719 C |  A_098 :                       676D C |
+ A_099 :                       672A C |  A_100 :                       67D7 C |
+ A_101 :                       673B C |  A_102 :                       674A C |
+ A_103 :                       6685 C |  A_104 :                       679C C |
+ A_105 :                       67CB C |  A_106 :                       6848 C |
+ A_107 :                       6806 C |  A_108 :                       68C3 C |
+ A_109 :                       6978 C |  A_110 :                       698E C |
+ A_111 :                       69A6 C |  A_112 :                       69B2 C |
+ A_113 :                       6B18 C |  A_114 :                       69C3 C |
+ A_115 :                       6AFA C |  A_116 :                       69ED C |
+ A_117 :                       6B49 C |  A_118 :                       69FF C |
+ A_119 :                       6A15 C |  A_120 :                       6A21 C |
+ A_121 :                       6C5E C |  A_122 :                       6A3D C |
+ A_123 :                       6A5D C |  A_124 :                       6A75 C |
+ A_125 :                       6AAB C |  A_126 :                       6B7D C |
+ A_127 :                       6AC6 C |  A_128 :                       6BB2 C |
+ A_129 :                       6BF9 C |  A_130 :                       6C8F C |
+ A_131 :                       608E C |  A_132 :                       6C6F C |
+ A_133 :                       6CB6 C |  A_134 :                       6629 C |
+ A_135 :                       6CAA C |  A_136 :                       6CC7 C |
+ A_137 :                       6D3E C |  A_138 :                       6D4F C |
+ A_139 :                       6DED C |  A_140 :                       6E07 C |
+ A_141 :                       6E58 C |  A_142 :                       6E62 C |
+ A_143 :                       6E21 C |  A_144 :                       6E3B C |
+ A_145 :                       6E55 C |  A_146 :                       6EF4 C |
+ A_147 :                       6F14 C |  A_148 :                       6ED8 C |
+ A_149 :                       6F47 C |  A_150 :                       7045 C |
+ A_151 :                       6F62 C |  A_152 :                       6FA0 C |
+ A_153 :                       6F7D C |  A_154 :                       6F80 C |
+ A_155 :                       6FC3 C |  A_156 :                       7089 C |
+ A_157 :                       6630 C |  A_158 :                       71EB C |
+ A_159 :                       6FEC C |  A_160 :                       70E2 C |
+ A_161 :                       711B C |  A_162 :                       7144 C |
+ A_163 :                       7154 C |  A_164 :                       73E5 C |
+ A_165 :                       71B5 C |  A_166 :                       728A C |
+ A_167 :                       7214 C |  A_168 :                       7206 C |
+ A_169 :                       72BD C |  A_170 :                       72D3 C |
+ A_171 :                       7325 C | *CASESENSITIVE :                  0 - |
+*COMPMODE :                       0 - | *CONSTPI :        3.141592653589793 - |
+ C_8603 :                      5403 - |  C_8785 :                      540F - |
+ C_8872 :                      5412 - |  C_8881 :                      5415 - |
+ C_889E :                      5418 - |  C_8904 :                      541B - |
+ C_8A03 :                      541E - |  C_8A0F :                      5421 - |
+ C_8A2C :                      5424 - |  C_8A5B :                      5427 - |
+ C_8B58 :                      542A - |  C_8B85 :                      542D - |
+ C_8B9C :                      5430 - |  C_8C26 :                      5433 - |
+ C_8C31 :                      5436 - |  C_8C32 :                      5439 - |
+ C_8C83 :                      543C - |  C_8C96 :                      5406 - |
+*C_8C99 :                      5409 - | *DATE :                 "1/17/2023" - |
+*FALSE :                          0 - | *FULLPMMU :                       1 - |
+ GAME80C_TOP :                 5B00 - |  GAME80_TOP :                  5400 - |
+ GAME_WORK :                   8000 - | *HAS64 :                          0 - |
+*HASFPU :                         0 - | *HASPMMU :                        0 - |
+ INP_STADDR :                  5B33 C |  INP_WADDR :                   5B60 C |
+*INSUPMODE :                      0 - | *LISTON :                         1 - |
+*MACEXP :                         7 - | *MOMCPU :                        80 - |
+*MOMCPUNAME :                 "Z80" - | *NESTMAX :                      100 - |
+*ORGMAP :                         0 - | *PADDING :                        1 - |
+ PROG_START :                  8100 C |  RAM12K :                         0 - |
+ RAM8K :                          1 - | *RELAXED :                        0 - |
+ SBCZ80 :                         0 - |  SMEZ80FULL :                     0 - |
+ START_CPL :                   5B8E C |  STR_1 :                       7420 C |
+ STR_10 :                      7486 C |  STR_11 :                      748A C |
+ STR_12 :                      7490 C |  STR_2 :                       7437 C |
+ STR_3 :                       744B C |  STR_4 :                       745B C |
+ STR_5 :                       746C C |  STR_6 :                       7471 C |
+ STR_7 :                       7480 C |  STR_8 :                       7482 C |
+ STR_9 :                       7484 C |  SUPERMEZ80 :                     0 - |
+*TIME :                  "21:56:29" - | *TRUE :                           1 - |
+*VERSION :                     142F - |  V_06H :                       8006 C |
+ V_0CH :                       800C C |  V_0EH :                       800E C |
+ V_12H :                       8012 C |  V_14H :                       8014 C |
+ V_18H :                       8018 C |  V_1AH :                       801A C |
+ V_1CH :                       801C C |  V_20H :                       8020 C |
+ V_22H :                       8022 C |  V_24H :                       8024 C |
+ V_26H :                       8026 C |  V_2AH :                       802A C |
+ V_30H :                       8030 C |  V_34H :                       8034 C |
+ V_38H :                       8038 C |  V_4EH :                       804E C |
+ V_50H :                       8050 C |  V_52H :                       8052 C |
+
+    247 symbols
+     28 unused symbols
+
+ AS V1.42 Beta [Bld 227] - Source File game80c.asm - Page 3 - 1/17/2023 21:56:29
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.04 seconds assembly time
+
+   3516 lines source file
+      2 passes
+      0 errors
+      0 warnings

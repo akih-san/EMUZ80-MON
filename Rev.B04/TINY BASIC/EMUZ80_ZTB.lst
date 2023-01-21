@@ -1,0 +1,1475 @@
+ AS V1.42 Beta [Bld 227] - Source File EMUZ80_ZTB.ASM - Page 1 - 1/17/2023 21:48:59
+
+
+       1/       0 :                     	page	0
+       2/       0 :                     	cpu	z80
+       3/       0 :                     
+       4/       0 :                     ;	PALO ALTO TINY BASIC
+       5/       0 :                     ;	PORTABLE Z80 VERSION
+       6/       0 :                     ;	TARGET: SBCZ80
+       7/       0 :                     ;	ASSEMBLER: ARCPIT XZ80.EXE
+       8/       0 :                     ;
+       9/       0 :                     ;	MEMORY ASIGN
+      10/       0 : =0H                  SuperMEZ80 = 0
+      11/       0 : =0H                  SMEZ80Full = 0
+      12/       0 : =0H                  RAM12K = 0
+      13/       0 : =1H                  RAM8K = 1
+      14/       0 : =0H                  RAM4K = 0
+      15/       0 :                     
+      16/       0 : =>FALSE              	IF	SuperMEZ80
+      17/       0 :                     RAMTOP	EQU	end_code
+      18/       0 :                     RAMSIZ	EQU	10000H - end_code
+      19/       0 :                     VALTOP	EQU	10000H - 300H
+      20/       0 :                     TSTACK	EQU	10000H - 180H
+      21/       0 : [16]                 	ENDIF
+      22/       0 :                     
+      23/       0 : =>FALSE              	IF	SMEZ80Full
+      24/       0 :                     RAMTOP	EQU	08000H
+      25/       0 :                     RAMSIZ	EQU	8000H
+      26/       0 :                     VALTOP	EQU	RAMTOP + RAMSIZ - 300H
+      27/       0 :                     TSTACK	EQU	RAMTOP + RAMSIZ - 180H
+      28/       0 : [23]                 	ENDIF
+      29/       0 :                     
+      30/       0 : =>FALSE              	IF	RAM12K
+      31/       0 :                     RAMTOP	EQU	0C000H
+      32/       0 :                     RAMSIZ	EQU	3000H
+      33/       0 :                     VALTOP	EQU	RAMTOP + RAMSIZ - 300H
+      34/       0 :                     TSTACK	EQU	RAMTOP + RAMSIZ - 180H
+      35/       0 : [30]                 	ENDIF
+      36/       0 :                     
+      37/       0 : =>TRUE               	IF	RAM8K
+      38/       0 : =8000H               RAMTOP	EQU	08000H
+      39/       0 : =2000H               RAMSIZ	EQU	2000H
+      40/       0 : =9D00H               VALTOP	EQU	RAMTOP + RAMSIZ - 300H
+      41/       0 : =9E80H               TSTACK	EQU	RAMTOP + RAMSIZ - 180H
+      42/       0 : [37]                 	ENDIF
+      43/       0 :                     
+      44/       0 : =>FALSE              	IF	RAM4K
+      45/       0 :                     ; ORIGINAL MEMORY MAP for PIC18F47Q43
+      46/       0 :                     RAMTOP	EQU	08000H
+      47/       0 :                     RAMSIZ	EQU	1000H
+      48/       0 :                     VALTOP	EQU	RAMTOP + RAMSIZ - 300H
+      49/       0 :                     TSTACK	EQU	RAMTOP + RAMSIZ - 180H
+      50/       0 : [44]                 	ENDIF
+      51/       0 :                     
+      52/       0 : =>FALSE              	if SuperMEZ80
+      53/       0 :                     ZTBTOP	EQU	40H
+      54/       0 : =>TRUE               	else
+      55/       0 : =4C00H               ZTBTOP	EQU	4C00H
+      56/       0 : [52]                 	endif
+      57/       0 :                     
+      58/       0 :                     ;;
+      59/       0 :                     ;	PALO ALTO TINY BASIC
+      60/       0 :                     ;
+      61/       0 : =9D37H               LBUF	EQU	VALTOP+0037H
+      62/       0 : =50H                 LBFSZ	EQU	80
+      63/       0 : =9D87H               MSTK	EQU	LBUF+LBFSZ
+      64/       0 : =9DA5H               TMSTK	EQU	MSTK+30
+      65/       0 :                     ;
+      66/       0 : ='>'                 PROMPT	EQU	'>'
+      67/       0 : =7FH                 RUBOUT	EQU	7FH
+      68/       0 : =8H                  BS	EQU	08H
+      69/       0 : =1BH                 ESC	EQU	1BH
+      70/       0 :                     ;
+      71/       0 :                     MTST	MACRO	p1, p2
+      72/       0 :                     	CALL	TEST
+      73/       0 :                     	DB	p1
+      74/       0 :                     	DB	p2-$-1
+      75/       0 :                     	ENDM
+      76/       0 :                     CASE_	MACRO	p1, p2
+      77/       0 :                     	DB	p1
+      78/       0 :                     	DB	(p2 >> 8)+80H
+      79/       0 :                     	DB	p2 & 0FFH
+      80/       0 :                     	ENDM
+      81/       0 :                     MENDC	MACRO	p1
+      82/       0 :                     	DB	(p1 + 8000H) >> 8
+      83/       0 :                     	DB	p1 & 0FFH
+      84/       0 :                     	ENDM
+      85/       0 :                     ;
+      86/       0 :                     
+      87/    4C00 :                     	org	ZTBTOP
+      88/    4C00 :                     
+      89/    4C00 : =4C00H               ITOP	EQU	$
+      90/    4C00 :                     
+      91/    4C00 : C3 06 4C            	jp	ENTRY		;COLD START
+      92/    4C03 : C3 27 4C            	jp	START		;WARM START
+      93/    4C06 :                     
+      94/    4C06 : 31 80 9E            ENTRY:	LD	SP,TSTACK
+      95/    4C09 : 21 14 80            	LD	HL,OTOP
+      96/    4C0C : 22 00 80            	LD	(OBTM),HL
+      97/    4C0F : CD B3 53            	CALL	CRLF
+      98/    4C12 : 11 6C 53            	LD	DE,OPNMS1
+      99/    4C15 : 97                  	SUB	A
+     100/    4C16 : CD A5 53            	CALL	MSG
+     101/    4C19 : 11 81 53            	LD	DE,OPNMS2
+     102/    4C1C : 97                  	SUB	A
+     103/    4C1D : CD A5 53            	CALL	MSG
+     104/    4C20 : 11 96 53            	LD	DE,OPNMS3
+     105/    4C23 : 97                  	SUB	A
+     106/    4C24 : CD A5 53            	CALL	MSG
+     107/    4C27 :                     ;
+     108/    4C27 : 31 80 9E            START:	LD	SP,TSTACK
+     109/    4C2A : CD B3 53            	CALL	CRLF
+     110/    4C2D : 11 58 53            	LD	DE,OKMES
+     111/    4C30 : 97                  	SUB	A
+     112/    4C31 : CD A5 53            	CALL	MSG
+     113/    4C34 : 21 3B 4C            	LD	HL,$+7
+     114/    4C37 : 22 02 80            	LD	(CLABL),HL
+     115/    4C3A : 21 00 00            	LD	HL,0000H
+     116/    4C3D : 22 08 80            	LD	(FCNTR),HL
+     117/    4C40 : 22 04 80            	LD	(RSTCK),HL
+     118/    4C43 :                     ;
+     119/    4C43 : 3E 3E               EDITR:	LD	A,PROMPT
+     120/    4C45 : CD A3 4C            	CALL	GETL
+     121/    4C48 : D5                  	PUSH	DE
+     122/    4C49 : 11 37 9D            	LD	DE,LBUF
+     123/    4C4C : CD DA 52            	CALL	GINT
+     124/    4C4F : CD 7F 4D            	CALL	SKPBL
+     125/    4C52 : 7C                  	LD	A,H
+     126/    4C53 : B5                  	OR	L
+     127/    4C54 : C1                  	POP	BC
+     128/    4C55 : CA 38 4D            	JP	Z,KWCPR
+     129/    4C58 : 1B                  INSRT:	DEC	DE
+     130/    4C59 : 7C                  	LD	A,H
+     131/    4C5A : 12                  	LD	(DE),A
+     132/    4C5B : 1B                  	DEC	DE
+     133/    4C5C : 7D                  	LD	A,L
+     134/    4C5D : 12                  	LD	(DE),A
+     135/    4C5E : C5                  	PUSH	BC
+     136/    4C5F : D5                  	PUSH	DE
+     137/    4C60 : 79                  	LD	A,C
+     138/    4C61 : 93                  	SUB	E
+     139/    4C62 : F5                  	PUSH	AF
+     140/    4C63 : CD F4 4C            	CALL	SRCH
+     141/    4C66 : D5                  	PUSH	DE
+     142/    4C67 : C2 7A 4C            	JP	NZ,MOVE
+     143/    4C6A : D5                  	PUSH	DE
+     144/    4C6B : CD 12 4D            	CALL	SKIPL
+     145/    4C6E : C1                  	POP	BC
+     146/    4C6F : 2A 00 80            	LD	HL,(OBTM)
+     147/    4C72 : CD 1E 4D            	CALL	TRNSF
+     148/    4C75 : 60                  	LD	H,B
+     149/    4C76 : 69                  	LD	L,C
+     150/    4C77 : 22 00 80            	LD	(OBTM),HL
+     151/    4C7A : C1                  MOVE:	POP	BC
+     152/    4C7B : 2A 00 80            	LD	HL,(OBTM)
+     153/    4C7E : F1                  	POP	AF
+     154/    4C7F : E5                  	PUSH	HL
+     155/    4C80 : FE 03               	CP	03H
+     156/    4C82 : CA 27 4C            	JP	Z,START
+     157/    4C85 : 85                  	ADD	A,L
+     158/    4C86 : 6F                  	LD	L,A
+     159/    4C87 : 3E 00               	LD	A,00H
+     160/    4C89 : 8C                  	ADC	A,H
+     161/    4C8A : 67                  	LD	H,A
+     162/    4C8B : 11 00 9D            	LD	DE,VALTOP
+     163/    4C8E : CD 3B 52            	CALL	COMPR
+     164/    4C91 : D2 29 53            	JP	NC,ERSRY
+     165/    4C94 : 22 00 80            	LD	(OBTM),HL
+     166/    4C97 : D1                  	POP	DE
+     167/    4C98 : CD 29 4D            	CALL	TR2
+     168/    4C9B : D1                  	POP	DE
+     169/    4C9C : E1                  	POP	HL
+     170/    4C9D : CD 1E 4D            	CALL	TRNSF
+     171/    4CA0 : C3 43 4C            	JP	EDITR
+     172/    4CA3 :                     ;
+     173/    4CA3 : CD B5 53            GETL:	CALL	PUT
+     174/    4CA6 : 11 37 9D            	LD	DE,LBUF
+     175/    4CA9 : CD C1 53            GETL1:	CALL	GET
+     176/    4CAC : CA A9 4C            	JP	Z,GETL1
+     177/    4CAF : FE 0A               	CP	0AH
+     178/    4CB1 : CA A9 4C            	JP	Z,GETL1
+     179/    4CB4 : B7                  	OR	A
+     180/    4CB5 : CA A9 4C            	JP	Z,GETL1
+     181/    4CB8 : FE 08               	CP	BS
+     182/    4CBA : CA D3 4C            	JP	Z,CRUB
+     183/    4CBD : FE 18               	CP	'X'-'@'
+     184/    4CBF : CA EC 4C            	JP	Z,CCAN
+     185/    4CC2 : CD B5 53            	CALL	PUT
+     186/    4CC5 :                     
+     187/    4CC5 : CD CA 53            	call	GET1	; LOW to UPPER
+     188/    4CC8 :                     
+     189/    4CC8 : 12                  	LD	(DE),A
+     190/    4CC9 : 13                  	INC	DE
+     191/    4CCA : FE 0D               	CP	0DH
+     192/    4CCC : C8                  	RET	Z
+     193/    4CCD : 7B                  	LD	A,E
+     194/    4CCE : FE 87               	CP	LBUFL + LBFSZ
+     195/    4CD0 : C2 A9 4C            	JP	NZ,GETL1
+     196/    4CD3 : 7B                  CRUB:	LD	A,E
+     197/    4CD4 : FE 37               	CP	LBUFL
+     198/    4CD6 : CA A9 4C            	JP	Z,GETL1
+     199/    4CD9 : 1B                  	DEC	DE
+     200/    4CDA : 3E 08               	LD	A,BS
+     201/    4CDC : CD B5 53            	CALL	PUT
+     202/    4CDF :                     
+     203/    4CDF : 3E 20               	LD	A,' '
+     204/    4CE1 : CD B5 53            	CALL	PUT
+     205/    4CE4 : 3E 08               	LD	A,BS
+     206/    4CE6 : CD B5 53            	CALL	PUT
+     207/    4CE9 :                     
+     208/    4CE9 : C3 A9 4C            	JP	GETL1
+     209/    4CEC : CD B3 53            CCAN:	CALL	CRLF
+     210/    4CEF : 3E 40               	LD	A,'@'
+     211/    4CF1 : C3 A3 4C            	JP	GETL
+     212/    4CF4 : =37H                 LBUFL	EQU	LBUF & 0FFH
+     213/    4CF4 :                     ;
+     214/    4CF4 : 7C                  SRCH:	LD	A,H
+     215/    4CF5 : B7                  	OR	A
+     216/    4CF6 : FA 22 53            	JP	M,ERHOW
+     217/    4CF9 : 11 14 80            	LD	DE,OTOP
+     218/    4CFC : E5                  SRCH1:	PUSH	HL
+     219/    4CFD : 2A 00 80            	LD	HL,(OBTM)
+     220/    4D00 : 2B                  	DEC	HL
+     221/    4D01 : CD 3B 52            	CALL	COMPR
+     222/    4D04 : E1                  	POP	HL
+     223/    4D05 : D8                  	RET	C
+     224/    4D06 : 1A                  	LD	A,(DE)
+     225/    4D07 : 95                  	SUB	L
+     226/    4D08 : 47                  	LD	B,A
+     227/    4D09 : 13                  	INC	DE
+     228/    4D0A : 1A                  	LD	A,(DE)
+     229/    4D0B : 9C                  	SBC	A,H
+     230/    4D0C : DA 13 4D            	JP	C,SKPL1
+     231/    4D0F : 1B                  	DEC	DE
+     232/    4D10 : B0                  	OR	B
+     233/    4D11 : C9                  	RET
+     234/    4D12 :                     ;
+     235/    4D12 : 13                  SKIPL:	INC	DE
+     236/    4D13 : 13                  SKPL1:	INC	DE
+     237/    4D14 : 1A                  SKPL2:	LD	A,(DE)
+     238/    4D15 : FE 0D               	CP	0DH
+     239/    4D17 : C2 13 4D            	JP	NZ,SKPL1
+     240/    4D1A : 13                  	INC	DE
+     241/    4D1B : C3 FC 4C            	JP	SRCH1
+     242/    4D1E :                     ;
+     243/    4D1E : CD 3B 52            TRNSF:	CALL	COMPR
+     244/    4D21 : C8                  	RET	Z
+     245/    4D22 : 1A                  	LD	A,(DE)
+     246/    4D23 : 02                  	LD	(BC),A
+     247/    4D24 : 13                  	INC	DE
+     248/    4D25 : 03                  	INC	BC
+     249/    4D26 : C3 1E 4D            	JP	TRNSF
+     250/    4D29 :                     ;
+     251/    4D29 : 78                  TR2:	LD	A,B
+     252/    4D2A : 92                  	SUB	D
+     253/    4D2B : C2 31 4D            	JP	NZ,TR2E
+     254/    4D2E : 79                  	LD	A,C
+     255/    4D2F : 93                  	SUB	E
+     256/    4D30 : C8                  	RET	Z
+     257/    4D31 : 1B                  TR2E:	DEC	DE
+     258/    4D32 : 2B                  	DEC	HL
+     259/    4D33 : 1A                  	LD	A,(DE)
+     260/    4D34 : 77                  	LD	(HL),A
+     261/    4D35 : C3 29 4D            	JP	TR2
+     262/    4D38 :                     ;
+     263/    4D38 : 21 86 4D            KWCPR:	LD	HL,CMDKW-1
+     264/    4D3B :                     ;
+     265/    4D3B : CD 7F 4D            NXTKW:	CALL	SKPBL
+     266/    4D3E : D5                  NXTK1:	PUSH	DE
+     267/    4D3F : 1A                  KWC1:	LD	A,(DE)
+     268/    4D40 : 13                  	INC	DE
+     269/    4D41 : FE 2E               	CP	'.'
+     270/    4D43 : CA 5C 4D            	JP	Z,KWSRT
+     271/    4D46 : 23                  	INC	HL
+     272/    4D47 : BE                  	CP	(HL)
+     273/    4D48 : CA 3F 4D            	JP	Z,KWC1
+     274/    4D4B : 3E 7F               	LD	A,7FH
+     275/    4D4D : 1B                  	DEC	DE
+     276/    4D4E : BE                  	CP	(HL)
+     277/    4D4F : DA 63 4D            	JP	C,EXEQT
+     278/    4D52 : 23                  KWSK1:	INC	HL
+     279/    4D53 : BE                  	CP	(HL)
+     280/    4D54 : D2 52 4D            	JP	NC,KWSK1
+     281/    4D57 : 23                  	INC	HL
+     282/    4D58 : D1                  	POP	DE
+     283/    4D59 : C3 3E 4D            	JP	NXTK1
+     284/    4D5C :                     ;
+     285/    4D5C : 3E 7F               KWSRT:	LD	A,7FH
+     286/    4D5E : 23                  KWSK2:	INC	HL
+     287/    4D5F : BE                  	CP	(HL)
+     288/    4D60 : D2 5E 4D            	JP	NC,KWSK2
+     289/    4D63 :                     ;
+     290/    4D63 : 7E                  EXEQT:	LD	A,(HL)
+     291/    4D64 : 23                  	INC	HL
+     292/    4D65 : 6E                  	LD	L,(HL)
+     293/    4D66 : E6 7F               	AND	7FH
+     294/    4D68 : 67                  	LD	H,A
+     295/    4D69 : F1                  	POP	AF
+     296/    4D6A : E9                  	JP	(HL)
+     297/    4D6B :                     ;
+     298/    4D6B : E3                  TEST:	EX	(SP),HL
+     299/    4D6C : CD 7F 4D            	CALL	SKPBL
+     300/    4D6F : BE                  	CP	(HL)
+     301/    4D70 : 23                  	INC	HL
+     302/    4D71 : CA 7B 4D            	JP	Z,TSTEQ
+     303/    4D74 : C5                  	PUSH	BC
+     304/    4D75 : 4E                  	LD	C,(HL)
+     305/    4D76 : 06 00               	LD	B,00H
+     306/    4D78 : 09                  	ADD	HL,BC
+     307/    4D79 : C1                  	POP	BC
+     308/    4D7A : 1B                  	DEC	DE
+     309/    4D7B : 13                  TSTEQ:	INC	DE
+     310/    4D7C : 23                  	INC	HL
+     311/    4D7D : E3                  	EX	(SP),HL
+     312/    4D7E : C9                  	RET
+     313/    4D7F :                     ;
+     314/    4D7F : 1A                  SKPBL:	LD	A,(DE)
+     315/    4D80 : FE 20               	CP	' '
+     316/    4D82 : C0                  	RET	NZ
+     317/    4D83 : 13                  	INC	DE
+     318/    4D84 : C3 7F 4D            	JP	SKPBL
+     319/    4D87 :                     ;
+     320/    4D87 : (MACRO)              CMDKW:	CASE_	"LIST", LIST
+     320/    4D87 : 4C 49 53 54                 DB      "LIST"
+     320/    4D8B : CF                          DB      (LIST >> 8)+80H
+     320/    4D8C : 50                          DB      LIST & 0FFH
+     321/    4D8D : (MACRO)              	CASE_	"RUN", RUN
+     321/    4D8D : 52 55 4E                    DB      "RUN"
+     321/    4D90 : D0                          DB      (RUN >> 8)+80H
+     321/    4D91 : CD                          DB      RUN & 0FFH
+     322/    4D92 : (MACRO)              	CASE_	"NEW", NEW
+     322/    4D92 : 4E 45 57                    DB      "NEW"
+     322/    4D95 : CD                          DB      (NEW >> 8)+80H
+     322/    4D96 : E3                          DB      NEW & 0FFH
+     323/    4D97 : (MACRO)              	CASE_	"BYE", BYE
+     323/    4D97 : 42 59 45                    DB      "BYE"
+     323/    4D9A : CD                          DB      (BYE >> 8)+80H
+     323/    4D9B : E0                          DB      BYE & 0FFH
+     324/    4D9C : (MACRO)              STMKW:	CASE_	"NEXT", NEXT
+     324/    4D9C : 4E 45 58 54                 DB      "NEXT"
+     324/    4DA0 : CE                          DB      (NEXT >> 8)+80H
+     324/    4DA1 : A2                          DB      NEXT & 0FFH
+     325/    4DA2 : (MACRO)              	CASE_	"LET", LET
+     325/    4DA2 : 4C 45 54                    DB      "LET"
+     325/    4DA5 : D0                          DB      (LET >> 8)+80H
+     325/    4DA6 : 9B                          DB      LET & 0FFH
+     326/    4DA7 : (MACRO)              	CASE_	"INPUT", INPUT
+     326/    4DA7 : 49 4E 50 55 54              DB      "INPUT"
+     326/    4DAC : D0                          DB      (INPUT >> 8)+80H
+     326/    4DAD : 3F                          DB      INPUT & 0FFH
+     327/    4DAE : (MACRO)              	CASE_	"IF", IFSTM
+     327/    4DAE : 49 46                       DB      "IF"
+     327/    4DB0 : CF                          DB      (IFSTM >> 8)+80H
+     327/    4DB1 : 3C                          DB      IFSTM & 0FFH
+     328/    4DB2 : (MACRO)              	CASE_	"GOTO", GOTO
+     328/    4DB2 : 47 4F 54 4F                 DB      "GOTO"
+     328/    4DB6 : D0                          DB      (GOTO >> 8)+80H
+     328/    4DB7 : BC                          DB      GOTO & 0FFH
+     329/    4DB8 : (MACRO)              	CASE_	"GOSUB", GOSUB
+     329/    4DB8 : 47 4F 53 55 42              DB      "GOSUB"
+     329/    4DBD : CD                          DB      (GOSUB >> 8)+80H
+     329/    4DBE : F2                          DB      GOSUB & 0FFH
+     330/    4DBF : (MACRO)              	CASE_	"RETURN", RETRN
+     330/    4DBF : 52 45 54 55 52 4E           DB      "RETURN"
+     330/    4DC5 : CE                          DB      (RETRN >> 8)+80H
+     330/    4DC6 : 14                          DB      RETRN & 0FFH
+     331/    4DC7 : (MACRO)              	CASE_	"REM", REM
+     331/    4DC7 : 52 45 4D                    DB      "REM"
+     331/    4DCA : CF                          DB      (REM >> 8)+80H
+     331/    4DCB : 44                          DB      REM & 0FFH
+     332/    4DCC : (MACRO)              	CASE_	"FOR", FOR
+     332/    4DCC : 46 4F 52                    DB      "FOR"
+     332/    4DCF : CE                          DB      (FOR >> 8)+80H
+     332/    4DD0 : 2F                          DB      FOR & 0FFH
+     333/    4DD1 : (MACRO)              	CASE_	"PRINT", PRINT
+     333/    4DD1 : 50 52 49 4E 54              DB      "PRINT"
+     333/    4DD6 : CF                          DB      (PRINT >> 8)+80H
+     333/    4DD7 : 7D                          DB      PRINT & 0FFH
+     334/    4DD8 : (MACRO)              	CASE_	"STOP", STOP
+     334/    4DD8 : 53 54 4F 50                 DB      "STOP"
+     334/    4DDC : CD                          DB      (STOP >> 8)+80H
+     334/    4DDD : EC                          DB      STOP & 0FFH
+     335/    4DDE : (MACRO)              	MENDC	LETDF
+     335/    4DDE : D0                          DB      (LETDF + 8000H) >> 8
+     335/    4DDF : 93                          DB      LETDF & 0FFH
+     336/    4DE0 :                     ;
+     337/    4DE0 : 0E 01               BYE:	ld	c, 1
+     338/    4DE2 : F7                  	rst	30H		; return to EMUZ80-MON
+     339/    4DE3 :                     	
+     340/    4DE3 : CD 05 51            NEW:	CALL	TSCR2
+     341/    4DE6 : 21 14 80            	LD	HL,OTOP
+     342/    4DE9 : 22 00 80            	LD	(OBTM),HL
+     343/    4DEC : CD 05 51            STOP:	CALL	TSCR2
+     344/    4DEF : C3 27 4C            	JP	START
+     345/    4DF2 :                     ;
+     346/    4DF2 : CD F7 4E            GOSUB:	CALL	PSHV
+     347/    4DF5 : CD 0E 51            	CALL	EEXPR
+     348/    4DF8 : D5                  	PUSH	DE
+     349/    4DF9 : CD F4 4C            	CALL	SRCH
+     350/    4DFC : C2 23 53            	JP	NZ,ERHW1
+     351/    4DFF : 2A 02 80            	LD	HL,(CLABL)
+     352/    4E02 : E5                  	PUSH	HL
+     353/    4E03 : 2A 04 80            	LD	HL,(RSTCK)
+     354/    4E06 : E5                  	PUSH	HL
+     355/    4E07 : 21 00 00            	LD	HL,0000H
+     356/    4E0A : 22 08 80            	LD	(FCNTR),HL
+     357/    4E0D : 39                  	ADD	HL,SP
+     358/    4E0E : 22 04 80            	LD	(RSTCK),HL
+     359/    4E11 : C3 DC 50            	JP	RUN2
+     360/    4E14 :                     
+     361/    4E14 : CD 05 51            RETRN:	CALL	TSCR2
+     362/    4E17 : 2A 04 80            	LD	HL,(RSTCK)
+     363/    4E1A : 7C                  	LD	A,H
+     364/    4E1B : B5                  	OR	L
+     365/    4E1C : CA 1B 53            	JP	Z,ERWHT
+     366/    4E1F : F9                  	LD	SP,HL
+     367/    4E20 : E1                  	POP	HL
+     368/    4E21 : 22 04 80            	LD	(RSTCK),HL
+     369/    4E24 : E1                  	POP	HL
+     370/    4E25 : 22 02 80            	LD	(CLABL),HL
+     371/    4E28 : D1                  	POP	DE
+     372/    4E29 : CD 20 4F            	CALL	POPV
+     373/    4E2C : C3 EC 50            	JP	ENDL
+     374/    4E2F :                     ;
+     375/    4E2F : CD F7 4E            FOR:	CALL	PSHV
+     376/    4E32 : CD A6 50            	CALL	LTSUB
+     377/    4E35 : 2B                  	DEC	HL
+     378/    4E36 : 22 08 80            	LD	(FCNTR),HL
+     379/    4E39 : 21 3E 4E            	LD	HL,KWTO-1
+     380/    4E3C : C3 3B 4D            	JP	NXTKW
+     381/    4E3F : (MACRO)              KWTO:	CASE_	"TO", FORTO
+     381/    4E3F : 54 4F                       DB      "TO"
+     381/    4E41 : CE                          DB      (FORTO >> 8)+80H
+     381/    4E42 : 45                          DB      FORTO & 0FFH
+     382/    4E43 : (MACRO)              	MENDC	ERWHT
+     382/    4E43 : D3                          DB      (ERWHT + 8000H) >> 8
+     382/    4E44 : 1B                          DB      ERWHT & 0FFH
+     383/    4E45 :                     ;
+     384/    4E45 : CD 0E 51            FORTO:	CALL	EEXPR
+     385/    4E48 : 22 0C 80            	LD	(FTOV),HL
+     386/    4E4B : 21 50 4E            	LD	HL,KWSTP-1
+     387/    4E4E : C3 3B 4D            	JP	NXTKW
+     388/    4E51 : (MACRO)              KWSTP:	CASE_	"STEP" ,FSTEP
+     388/    4E51 : 53 54 45 50                 DB      "STEP"
+     388/    4E55 : CE                          DB      (FSTEP >> 8)+80H
+     388/    4E56 : 59                          DB      FSTEP & 0FFH
+     389/    4E57 : (MACRO)              	MENDC	FSTP1
+     389/    4E57 : CE                          DB      (FSTP1 + 8000H) >> 8
+     389/    4E58 : 5F                          DB      FSTP1 & 0FFH
+     390/    4E59 :                     ;
+     391/    4E59 : CD 0E 51            FSTEP:	CALL	EEXPR
+     392/    4E5C : C3 62 4E            	JP	FOR0
+     393/    4E5F : 21 01 00            FSTP1:	LD	HL,0001H
+     394/    4E62 : 22 0A 80            FOR0:	LD	(FSTPV),HL
+     395/    4E65 : 2A 02 80            	LD	HL,(CLABL)
+     396/    4E68 : 22 0E 80            	LD	(FLABL),HL
+     397/    4E6B : EB                  	EX	DE,HL
+     398/    4E6C : 22 10 80            	LD	(FOBJ),HL
+     399/    4E6F : 01 0A 00            	LD	BC,000AH
+     400/    4E72 : 2A 08 80            	LD	HL,(FCNTR)
+     401/    4E75 : EB                  	EX	DE,HL
+     402/    4E76 : 60                  	LD	H,B
+     403/    4E77 : 68                  	LD	L,B
+     404/    4E78 : 39                  	ADD	HL,SP
+     405/    4E79 : 3E                  	DB	3EH
+     406/    4E7A : 09                  FOR3:	ADD	HL,BC
+     407/    4E7B : 7E                  	LD	A,(HL)
+     408/    4E7C : 23                  	INC	HL
+     409/    4E7D : B6                  	OR	(HL)
+     410/    4E7E : CA 9B 4E            	JP	Z,FOR10
+     411/    4E81 : 7E                  	LD	A,(HL)
+     412/    4E82 : 2B                  	DEC	HL
+     413/    4E83 : BA                  	CP	D
+     414/    4E84 : C2 7A 4E            	JP	NZ,FOR3
+     415/    4E87 : 7E                  	LD	A,(HL)
+     416/    4E88 : BB                  	CP	E
+     417/    4E89 : C2 7A 4E            	JP	NZ,FOR3
+     418/    4E8C : EB                  FOR5:	EX	DE,HL
+     419/    4E8D : 21 00 00            	LD	HL,0000H
+     420/    4E90 : 39                  	ADD	HL,SP
+     421/    4E91 : 44                  	LD	B,H
+     422/    4E92 : 4D                  	LD	C,L
+     423/    4E93 : 21 0A 00            	LD	HL,000AH
+     424/    4E96 : 19                  	ADD	HL,DE
+     425/    4E97 : CD 29 4D            	CALL	TR2
+     426/    4E9A : F9                  	LD	SP,HL
+     427/    4E9B : 2A 10 80            FOR10:	LD	HL,(FOBJ)
+     428/    4E9E : EB                  	EX	DE,HL
+     429/    4E9F : C3 EC 50            	JP	ENDL
+     430/    4EA2 :                     ;
+     431/    4EA2 : CD A6 52            NEXT:	CALL	TSTV
+     432/    4EA5 : DA 1B 53            	JP	C,ERWHT
+     433/    4EA8 : 22 06 80            	LD	(NCNTR),HL
+     434/    4EAB : D5                  NEXT1:	PUSH	DE
+     435/    4EAC : EB                  	EX	DE,HL
+     436/    4EAD : 2A 08 80            	LD	HL,(FCNTR)
+     437/    4EB0 : 7C                  	LD	A,H
+     438/    4EB1 : B5                  	OR	L
+     439/    4EB2 : CA 1C 53            	JP	Z,ERWT1
+     440/    4EB5 : CD 3B 52            	CALL	COMPR
+     441/    4EB8 : CA C5 4E            	JP	Z,NEXT2
+     442/    4EBB : D1                  	POP	DE
+     443/    4EBC : CD 20 4F            	CALL	POPV
+     444/    4EBF : 2A 06 80            	LD	HL,(NCNTR)
+     445/    4EC2 : C3 AB 4E            	JP	NEXT1
+     446/    4EC5 : 5E                  NEXT2:	LD	E,(HL)
+     447/    4EC6 : 23                  	INC	HL
+     448/    4EC7 : 56                  	LD	D,(HL)
+     449/    4EC8 : 2A 0A 80            	LD	HL,(FSTPV)
+     450/    4ECB : E5                  	PUSH	HL
+     451/    4ECC : 19                  	ADD	HL,DE
+     452/    4ECD : EB                  	EX	DE,HL
+     453/    4ECE : 2A 08 80            	LD	HL,(FCNTR)
+     454/    4ED1 : 73                  	LD	(HL),E
+     455/    4ED2 : 23                  	INC	HL
+     456/    4ED3 : 72                  	LD	(HL),D
+     457/    4ED4 : 2A 0C 80            	LD	HL,(FTOV)
+     458/    4ED7 : F1                  	POP	AF
+     459/    4ED8 : B7                  	OR	A
+     460/    4ED9 : F2 DD 4E            	JP	P,NEXT4
+     461/    4EDC : EB                  	EX	DE,HL
+     462/    4EDD : CD 35 52            NEXT4:	CALL	CMINT
+     463/    4EE0 : D1                  	POP	DE
+     464/    4EE1 : DA F1 4E            	JP	C,NEXT5
+     465/    4EE4 : 2A 0E 80            	LD	HL,(FLABL)
+     466/    4EE7 : 22 02 80            	LD	(CLABL),HL
+     467/    4EEA : 2A 10 80            	LD	HL,(FOBJ)
+     468/    4EED : EB                  	EX	DE,HL
+     469/    4EEE : C3 EC 50            	JP	ENDL
+     470/    4EF1 : CD 20 4F            NEXT5:	CALL	POPV
+     471/    4EF4 : C3 EC 50            	JP	ENDL
+     472/    4EF7 :                     ;
+     473/    4EF7 : 21 A5 9D            PSHV:	LD	HL,TMSTK
+     474/    4EFA : CD 29 52            	CALL	TWSCP
+     475/    4EFD : C1                  	POP	BC
+     476/    4EFE : 39                  	ADD	HL,SP
+     477/    4EFF : D2 29 53            	JP	NC,ERSRY
+     478/    4F02 : 2A 08 80            	LD	HL,(FCNTR)
+     479/    4F05 : 7C                  	LD	A,H
+     480/    4F06 : B5                  	OR	L
+     481/    4F07 : CA 1D 4F            	JP	Z,NPSH
+     482/    4F0A : 2A 10 80            	LD	HL,(FOBJ)
+     483/    4F0D : E5                  	PUSH	HL
+     484/    4F0E : 2A 0E 80            	LD	HL,(FLABL)
+     485/    4F11 : E5                  	PUSH	HL
+     486/    4F12 : 2A 0C 80            	LD	HL,(FTOV)
+     487/    4F15 : E5                  	PUSH	HL
+     488/    4F16 : 2A 0A 80            	LD	HL,(FSTPV)
+     489/    4F19 : E5                  	PUSH	HL
+     490/    4F1A : 2A 08 80            	LD	HL,(FCNTR)
+     491/    4F1D : E5                  NPSH:	PUSH	HL
+     492/    4F1E : C5                  	PUSH	BC
+     493/    4F1F : C9                  	RET
+     494/    4F20 :                     ;
+     495/    4F20 : C1                  POPV:	POP	BC
+     496/    4F21 : E1                  	POP	HL
+     497/    4F22 : 22 08 80            	LD	(FCNTR),HL
+     498/    4F25 : 7C                  	LD	A,H
+     499/    4F26 : B5                  	OR	L
+     500/    4F27 : CA 3A 4F            	JP	Z,NPOP
+     501/    4F2A : E1                  	POP	HL
+     502/    4F2B : 22 0A 80            	LD	(FSTPV),HL
+     503/    4F2E : E1                  	POP	HL
+     504/    4F2F : 22 0C 80            	LD	(FTOV),HL
+     505/    4F32 : E1                  	POP	HL
+     506/    4F33 : 22 0E 80            	LD	(FLABL),HL
+     507/    4F36 : E1                  	POP	HL
+     508/    4F37 : 22 10 80            	LD	(FOBJ),HL
+     509/    4F3A : C5                  NPOP:	PUSH	BC
+     510/    4F3B : C9                  	RET
+     511/    4F3C :                     ;
+     512/    4F3C : CD 0E 51            IFSTM:	CALL	EEXPR
+     513/    4F3F : 7C                  	LD	A,H
+     514/    4F40 : B5                  	OR	L
+     515/    4F41 : C2 E3 50            	JP	NZ,NXTGO
+     516/    4F44 : 21 00 00            REM:	LD	HL,0000H
+     517/    4F47 : CD 14 4D            	CALL	SKPL2
+     518/    4F4A : D2 DC 50            	JP	NC,RUN2
+     519/    4F4D : C3 27 4C            	JP	START
+     520/    4F50 :                     ;
+     521/    4F50 : CD DA 52            LIST:	CALL	GINT
+     522/    4F53 : CD 05 51            	CALL	TSCR2
+     523/    4F56 : CD F4 4C            	CALL	SRCH
+     524/    4F59 : DA 27 4C            LISTL:	JP	C,START
+     525/    4F5C : CD 68 4F            	CALL	WLINE
+     526/    4F5F : CD C1 53            	CALL	BREAK
+     527/    4F62 : CD FC 4C            	CALL	SRCH1
+     528/    4F65 : C3 59 4F            	JP	LISTL
+     529/    4F68 :                     ;
+     530/    4F68 : 1A                  WLINE:	LD	A,(DE)
+     531/    4F69 : 6F                  	LD	L,A
+     532/    4F6A : 13                  	INC	DE
+     533/    4F6B : 1A                  	LD	A,(DE)
+     534/    4F6C : 67                  	LD	H,A
+     535/    4F6D : 13                  	INC	DE
+     536/    4F6E : 0E 04               	LD	C,04H
+     537/    4F70 : CD F3 4F            	CALL	WINT
+     538/    4F73 : 3E 20               	LD	A,' '
+     539/    4F75 : CD B5 53            	CALL	PUT
+     540/    4F78 : 97                  	SUB	A
+     541/    4F79 : CD A5 53            	CALL	MSG
+     542/    4F7C : C9                  	RET
+     543/    4F7D :                     ;
+     544/    4F7D : 0E 06               PRINT:	LD	C,6
+     545/    4F7F : (MACRO)              PRSC:	MTST	3BH,PRCR
+     545/    4F7F : CD 6B 4D                    CALL    TEST
+     545/    4F82 : 3B                          DB      3BH
+     545/    4F83 : 06                          DB      PRCR-$-1
+     546/    4F84 : CD B3 53            	CALL	CRLF
+     547/    4F87 : C3 E3 50            	JP	NXTGO
+     548/    4F8A : (MACRO)              PRCR:	MTST	0DH,PRSHA
+     548/    4F8A : CD 6B 4D                    CALL    TEST
+     548/    4F8D : 0D                          DB      0DH
+     548/    4F8E : 06                          DB      PRSHA-$-1
+     549/    4F8F : CD B3 53            	CALL	CRLF
+     550/    4F92 : C3 D3 50            	JP	RUN1
+     551/    4F95 : (MACRO)              PRSHA:	MTST	23H,PRLTR
+     551/    4F95 : CD 6B 4D                    CALL    TEST
+     551/    4F98 : 23                          DB      23H
+     551/    4F99 : 07                          DB      PRLTR-$-1
+     552/    4F9A : CD 0E 51            	CALL	EEXPR
+     553/    4F9D : 4D                  	LD	C,L
+     554/    4F9E : C3 A7 4F            	JP	PRCMA
+     555/    4FA1 : CD C3 4F            PRLTR:	CALL	PRSUB
+     556/    4FA4 : C3 B8 4F            	JP	PREXP
+     557/    4FA7 : (MACRO)              PRCMA:	MTST	2CH,PREND
+     557/    4FA7 : CD 6B 4D                    CALL    TEST
+     557/    4FAA : 2C                          DB      2CH
+     557/    4FAB : 06                          DB      PREND-$-1
+     558/    4FAC : CD F2 50            	CALL	TSTSC
+     559/    4FAF : C3 95 4F            	JP	PRSHA
+     560/    4FB2 : CD B3 53            PREND:	CALL	CRLF
+     561/    4FB5 : C3 EC 50            	JP	ENDL
+     562/    4FB8 : CD 0E 51            PREXP:	CALL	EEXPR
+     563/    4FBB : C5                  	PUSH	BC
+     564/    4FBC : CD F3 4F            	CALL	WINT
+     565/    4FBF : C1                  	POP	BC
+     566/    4FC0 : C3 A7 4F            	JP	PRCMA
+     567/    4FC3 :                     ;
+     568/    4FC3 : (MACRO)              PRSUB:	MTST	22H,PR13
+     568/    4FC3 : CD 6B 4D                    CALL    TEST
+     568/    4FC6 : 22                          DB      22H
+     568/    4FC7 : 05                          DB      PR13-$-1
+     569/    4FC8 : 3E 22               	LD	A,22H
+     570/    4FCA : C3 D4 4F            	JP	PR11
+     571/    4FCD : (MACRO)              PR13:	MTST	27H,PR14
+     571/    4FCD : CD 6B 4D                    CALL    TEST
+     571/    4FD0 : 27                          DB      27H
+     571/    4FD1 : 0E                          DB      PR14-$-1
+     572/    4FD2 : 3E 27               	LD	A,27H
+     573/    4FD4 : CD A5 53            PR11:	CALL	MSG
+     574/    4FD7 : FE 0D               	CP	0DH
+     575/    4FD9 : E1                  	POP	HL
+     576/    4FDA : CA D3 50            	JP	Z,RUN1
+     577/    4FDD : C3 EE 4F            	JP	PR12
+     578/    4FE0 : (MACRO)              PR14:	MTST	5FH,PR15
+     578/    4FE0 : CD 6B 4D                    CALL    TEST
+     578/    4FE3 : 5F                          DB      5FH
+     578/    4FE4 : 0D                          DB      PR15-$-1
+     579/    4FE5 : 3E 8D               	LD	A,80H+0DH
+     580/    4FE7 : CD B5 53            	CALL	PUT
+     581/    4FEA : CD B5 53            	CALL	PUT
+     582/    4FED : E1                  	POP	HL
+     583/    4FEE : 23                  PR12:	INC	HL
+     584/    4FEF : 23                  	INC	HL
+     585/    4FF0 : 23                  	INC	HL
+     586/    4FF1 : E9                  	JP	(HL)
+     587/    4FF2 : C9                  PR15:	RET
+     588/    4FF3 :                     ;
+     589/    4FF3 : D5                  WINT:	PUSH	DE
+     590/    4FF4 : 11 0A 00            	LD	DE,000AH
+     591/    4FF7 : D5                  	PUSH	DE
+     592/    4FF8 : 42                  	LD	B,D
+     593/    4FF9 : 0D                  	DEC	C
+     594/    4FFA : CD 26 52            	CALL	ABS
+     595/    4FFD : F2 03 50            	JP	P,WINT1
+     596/    5000 : 06 2D               	LD	B,'-'
+     597/    5002 : 0D                  	DEC	C
+     598/    5003 : C5                  WINT1:	PUSH	BC
+     599/    5004 : CD 09 52            WINT2:	CALL	DIVID
+     600/    5007 : 78                  	LD	A,B
+     601/    5008 : B1                  	OR	C
+     602/    5009 : CA 14 50            	JP	Z,WINT3
+     603/    500C : E3                  	EX	(SP),HL
+     604/    500D : 2D                  	DEC	L
+     605/    500E : E5                  	PUSH	HL
+     606/    500F : 60                  	LD	H,B
+     607/    5010 : 69                  	LD	L,C
+     608/    5011 : C3 04 50            	JP	WINT2
+     609/    5014 : C1                  WINT3:	POP	BC
+     610/    5015 : 0D                  WINT4:	DEC	C
+     611/    5016 : 79                  	LD	A,C
+     612/    5017 : B7                  	OR	A
+     613/    5018 : FA 23 50            	JP	M,WINT5
+     614/    501B : 3E 20               	LD	A,' '
+     615/    501D : CD B5 53            	CALL	PUT
+     616/    5020 : C3 15 50            	JP	WINT4
+     617/    5023 : 78                  WINT5:	LD	A,B
+     618/    5024 : CD B5 53            	CALL	PUT
+     619/    5027 : 5D                  	LD	E,L
+     620/    5028 : 7B                  WINT6:	LD	A,E
+     621/    5029 : FE 0A               	CP	0AH
+     622/    502B : D1                  	POP	DE
+     623/    502C : C8                  	RET	Z
+     624/    502D : C6 30               	ADD	A,30H
+     625/    502F : CD B5 53            	CALL	PUT
+     626/    5032 : C3 28 50            	JP	WINT6
+     627/    5035 :                     ;
+     628/    5035 : 2A 06 80            ERRIN:	LD	HL,(NCNTR)
+     629/    5038 : F9                  	LD	SP,HL
+     630/    5039 : E1                  	POP	HL
+     631/    503A : 22 02 80            	LD	(CLABL),HL
+     632/    503D : D1                  	POP	DE
+     633/    503E : D1                  	POP	DE
+     634/    503F : D5                  INPUT:	PUSH	DE
+     635/    5040 : CD C3 4F            	CALL	PRSUB
+     636/    5043 : C3 4F 50            	JP	INPT2
+     637/    5046 : CD A6 52            INPT1:	CALL	TSTV
+     638/    5049 : DA 8A 50            	JP	C,INPT6
+     639/    504C : C3 61 50            	JP	INPT4
+     640/    504F : D5                  INPT2:	PUSH	DE
+     641/    5050 : CD A6 52            	CALL	TSTV
+     642/    5053 : DA 1B 53            	JP	C,ERWHT
+     643/    5056 : 1A                  	LD	A,(DE)
+     644/    5057 : 4F                  	LD	C,A
+     645/    5058 : 97                  	SUB	A
+     646/    5059 : 12                  	LD	(DE),A
+     647/    505A : D1                  	POP	DE
+     648/    505B : CD A5 53            	CALL	MSG
+     649/    505E : 79                  	LD	A,C
+     650/    505F : 1B                  	DEC	DE
+     651/    5060 : 12                  	LD	(DE),A
+     652/    5061 : D5                  INPT4:	PUSH	DE
+     653/    5062 : EB                  	EX	DE,HL
+     654/    5063 : 2A 02 80            	LD	HL,(CLABL)
+     655/    5066 : E5                  	PUSH	HL
+     656/    5067 : 21 3F 50            	LD	HL,INPUT
+     657/    506A : 22 02 80            	LD	(CLABL),HL
+     658/    506D : 21 00 00            	LD	HL,0000H
+     659/    5070 : 39                  	ADD	HL,SP
+     660/    5071 : 22 06 80            	LD	(NCNTR),HL
+     661/    5074 : D5                  	PUSH	DE
+     662/    5075 : 3E 3A               	LD	A,':'
+     663/    5077 : CD A3 4C            	CALL	GETL
+     664/    507A : 11 37 9D            	LD	DE,LBUF
+     665/    507D : CD 0E 51            	CALL	EEXPR
+     666/    5080 : D1                  	POP	DE
+     667/    5081 : EB                  	EX	DE,HL
+     668/    5082 : 73                  	LD	(HL),E
+     669/    5083 : 23                  	INC	HL
+     670/    5084 : 72                  	LD	(HL),D
+     671/    5085 : E1                  	POP	HL
+     672/    5086 : 22 02 80            	LD	(CLABL),HL
+     673/    5089 : D1                  	POP	DE
+     674/    508A : F1                  INPT6:	POP	AF
+     675/    508B : (MACRO)              	MTST	2CH,ENDL
+     675/    508B : CD 6B 4D                    CALL    TEST
+     675/    508E : 2C                          DB      2CH
+     675/    508F : 5C                          DB      ENDL-$-1
+     676/    5090 : C3 3F 50            	JP	INPUT
+     677/    5093 :                     ;
+     678/    5093 : CD FB 50            LETDF:	CALL	TSCR1
+     679/    5096 : FE 0D               	CP	0DH
+     680/    5098 : CA EC 50            	JP	Z,ENDL
+     681/    509B : CD A6 50            LET:	CALL	LTSUB
+     682/    509E : (MACRO)              	MTST	2CH,ENDL
+     682/    509E : CD 6B 4D                    CALL    TEST
+     682/    50A1 : 2C                          DB      2CH
+     682/    50A2 : 49                          DB      ENDL-$-1
+     683/    50A3 : C3 9B 50            	JP	LET
+     684/    50A6 :                     ;
+     685/    50A6 : CD A6 52            LTSUB:	CALL	TSTV
+     686/    50A9 : DA 1B 53            	JP	C,ERWHT
+     687/    50AC : E5                  	PUSH	HL
+     688/    50AD : (MACRO)              	MTST	3DH,LERR
+     688/    50AD : CD 6B 4D                    CALL    TEST
+     688/    50B0 : 3D                          DB      3DH
+     688/    50B1 : 3D                          DB      LERR-$-1
+     689/    50B2 : CD 0E 51            	CALL	EEXPR
+     690/    50B5 : 44                  	LD	B,H
+     691/    50B6 : 4D                  	LD	C,L
+     692/    50B7 : E1                  	POP	HL
+     693/    50B8 : 71                  	LD	(HL),C
+     694/    50B9 : 23                  	INC	HL
+     695/    50BA : 70                  	LD	(HL),B
+     696/    50BB : C9                  	RET
+     697/    50BC :                     ;
+     698/    50BC : CD 0E 51            GOTO:	CALL	EEXPR
+     699/    50BF : D5                  	PUSH	DE
+     700/    50C0 : CD 05 51            	CALL	TSCR2
+     701/    50C3 : CD F4 4C            	CALL	SRCH
+     702/    50C6 : C2 23 53            	JP	NZ,ERHW1
+     703/    50C9 : F1                  	POP	AF
+     704/    50CA : C3 DC 50            	JP	RUN2
+     705/    50CD :                     ;
+     706/    50CD : CD 05 51            RUN:	CALL	TSCR2
+     707/    50D0 : 11 14 80            	LD	DE,OTOP
+     708/    50D3 : 21 00 00            RUN1:	LD	HL,0000H
+     709/    50D6 : CD FC 4C            	CALL	SRCH1
+     710/    50D9 : DA 27 4C            	JP	C,START
+     711/    50DC : EB                  RUN2:	EX	DE,HL
+     712/    50DD : 22 02 80            	LD	(CLABL),HL
+     713/    50E0 : EB                  	EX	DE,HL
+     714/    50E1 : 13                  	INC	DE
+     715/    50E2 : 13                  	INC	DE
+     716/    50E3 : CD C1 53            NXTGO:	CALL	BREAK
+     717/    50E6 : 21 9B 4D            	LD	HL,STMKW-1
+     718/    50E9 : C3 3B 4D            	JP	NXTKW
+     719/    50EC :                     ;
+     720/    50EC : CD F2 50            ENDL:	CALL	TSTSC
+     721/    50EF : C3 1B 53            LERR:	JP	ERWHT
+     722/    50F2 :                     ;
+     723/    50F2 : (MACRO)              TSTSC:	MTST	3BH,TSCR1
+     723/    50F2 : CD 6B 4D                    CALL    TEST
+     723/    50F5 : 3B                          DB      3BH
+     723/    50F6 : 04                          DB      TSCR1-$-1
+     724/    50F7 : F1                  	POP	AF
+     725/    50F8 : C3 E3 50            	JP	NXTGO
+     726/    50FB :                     ;
+     727/    50FB : (MACRO)              TSCR1:	MTST	0DH,TSRTN
+     727/    50FB : CD 6B 4D                    CALL    TEST
+     727/    50FE : 0D                          DB      0DH
+     727/    50FF : 04                          DB      TSRTN-$-1
+     728/    5100 : F1                  	POP	AF
+     729/    5101 : C3 D3 50            	JP	RUN1
+     730/    5104 : C9                  TSRTN:	RET
+     731/    5105 :                     ;
+     732/    5105 : CD 7F 4D            TSCR2:	CALL	SKPBL
+     733/    5108 : FE 0D               	CP	0DH
+     734/    510A : C8                  	RET	Z
+     735/    510B : C3 1B 53            	JP	ERWHT
+     736/    510E :                     ;
+     737/    510E : CD 6D 51            EEXPR:	CALL	EXPR
+     738/    5111 : E5                  	PUSH	HL
+     739/    5112 : 21 17 51            	LD	HL,ROPKW-1
+     740/    5115 : C3 3B 4D            	JP	NXTKW
+     741/    5118 : (MACRO)              ROPKW:	CASE_	">=", GE1
+     741/    5118 : 3E 3D                       DB      ">="
+     741/    511A : D1                          DB      (GE1 >> 8)+80H
+     741/    511B : 2F                          DB      GE1 & 0FFH
+     742/    511C : (MACRO)              	CASE_	"<>", NE1
+     742/    511C : 3C 3E                       DB      "<>"
+     742/    511E : D1                          DB      (NE1 >> 8)+80H
+     742/    511F : 35                          DB      NE1 & 0FFH
+     743/    5120 : (MACRO)              	CASE_	'>', GT1
+     743/    5120 : 3E                          DB      '>'
+     743/    5121 : D1                          DB      (GT1 >> 8)+80H
+     743/    5122 : 3B                          DB      GT1 & 0FFH
+     744/    5123 : (MACRO)              	CASE_	'=', EQ1
+     744/    5123 : 3D                          DB      '='
+     744/    5124 : D1                          DB      (EQ1 >> 8)+80H
+     744/    5125 : 4A                          DB      EQ1 & 0FFH
+     745/    5126 : (MACRO)              	CASE_	"<=", LE1
+     745/    5126 : 3C 3D                       DB      "<="
+     745/    5128 : D1                          DB      (LE1 >> 8)+80H
+     745/    5129 : 42                          DB      LE1 & 0FFH
+     746/    512A : (MACRO)              	CASE_	'<', LT1
+     746/    512A : 3C                          DB      '<'
+     746/    512B : D1                          DB      (LT1 >> 8)+80H
+     746/    512C : 50                          DB      LT1 & 0FFH
+     747/    512D : (MACRO)              	MENDC	NOROP
+     747/    512D : D1                          DB      (NOROP + 8000H) >> 8
+     747/    512E : 56                          DB      NOROP & 0FFH
+     748/    512F :                     ;
+     749/    512F : CD 58 51            GE1:	CALL	IFEXQ
+     750/    5132 : D8                  	RET	C
+     751/    5133 : 6F                  	LD	L,A
+     752/    5134 : C9                  	RET
+     753/    5135 :                     ;
+     754/    5135 : CD 58 51            NE1:	CALL	IFEXQ
+     755/    5138 : C8                  	RET	Z
+     756/    5139 : 6F                  	LD	L,A
+     757/    513A : C9                  	RET
+     758/    513B :                     ;
+     759/    513B : CD 58 51            GT1:	CALL	IFEXQ
+     760/    513E : C8                  	RET	Z
+     761/    513F : D8                  	RET	C
+     762/    5140 : 6F                  	LD	L,A
+     763/    5141 : C9                  	RET
+     764/    5142 : CD 58 51            LE1:	CALL	IFEXQ
+     765/    5145 : 6F                  	LD	L,A
+     766/    5146 : C8                  	RET	Z
+     767/    5147 : D8                  	RET	C
+     768/    5148 : 6C                  	LD	L,H
+     769/    5149 : C9                  	RET
+     770/    514A : CD 58 51            EQ1:	CALL	IFEXQ
+     771/    514D : C0                  	RET	NZ
+     772/    514E : 6F                  	LD	L,A
+     773/    514F : C9                  	RET
+     774/    5150 : CD 58 51            LT1:	CALL	IFEXQ
+     775/    5153 : D0                  	RET	NC
+     776/    5154 : 6F                  	LD	L,A
+     777/    5155 : C9                  	RET
+     778/    5156 : E1                  NOROP:	POP	HL
+     779/    5157 : C9                  	RET
+     780/    5158 :                     ;
+     781/    5158 : 79                  IFEXQ:	LD	A,C
+     782/    5159 : E1                  	POP	HL
+     783/    515A : C1                  	POP	BC
+     784/    515B : E5                  	PUSH	HL
+     785/    515C : C5                  	PUSH	BC
+     786/    515D : 4F                  	LD	C,A
+     787/    515E : CD 6D 51            	CALL	EXPR
+     788/    5161 : EB                  	EX	DE,HL
+     789/    5162 : E3                  	EX	(SP),HL
+     790/    5163 : CD 35 52            	CALL	CMINT
+     791/    5166 : D1                  	POP	DE
+     792/    5167 : 21 00 00            	LD	HL,0000H
+     793/    516A : 3E 01               	LD	A,01H
+     794/    516C : C9                  	RET
+     795/    516D :                     ;
+     796/    516D : (MACRO)              EXPR:	MTST	2DH,EXPR1
+     796/    516D : CD 6B 4D                    CALL    TEST
+     796/    5170 : 2D                          DB      2DH
+     796/    5171 : 06                          DB      EXPR1-$-1
+     797/    5172 : 21 00 00            	LD	HL,0000H
+     798/    5175 : C3 91 51            	JP	NEGA1
+     799/    5178 : (MACRO)              EXPR1:	MTST	2BH,EXPR3
+     799/    5178 : CD 6B 4D                    CALL    TEST
+     799/    517B : 2B                          DB      2BH
+     799/    517C : 00                          DB      EXPR3-$-1
+     800/    517D : CD A9 51            EXPR3:	CALL	TERM
+     801/    5180 : (MACRO)              EXPR2:	MTST	2BH,NEGA0
+     801/    5180 : CD 6B 4D                    CALL    TEST
+     801/    5183 : 2B                          DB      2BH
+     801/    5184 : 07                          DB      NEGA0-$-1
+     802/    5185 : E5                  	PUSH	HL
+     803/    5186 : CD A9 51            	CALL	TERM
+     804/    5189 : C3 98 51            	JP	ADDBL
+     805/    518C : (MACRO)              NEGA0:	MTST	2DH,EXPRT
+     805/    518C : CD 6B 4D                    CALL    TEST
+     805/    518F : 2D                          DB      2DH
+     805/    5190 : 8D                          DB      EXPRT-$-1
+     806/    5191 : E5                  NEGA1:	PUSH	HL
+     807/    5192 : CD A9 51            	CALL	TERM
+     808/    5195 : CD 29 52            	CALL	TWSCP
+     809/    5198 : EB                  ADDBL:	EX	DE,HL
+     810/    5199 : E3                  	EX	(SP),HL
+     811/    519A : 7C                  	LD	A,H
+     812/    519B : AA                  	XOR	D
+     813/    519C : 7A                  	LD	A,D
+     814/    519D : 19                  	ADD	HL,DE
+     815/    519E : D1                  	POP	DE
+     816/    519F : FA 80 51            	JP	M,EXPR2
+     817/    51A2 : AC                  	XOR	H
+     818/    51A3 : F2 80 51            	JP	P,EXPR2
+     819/    51A6 : C3 22 53            	JP	ERHOW
+     820/    51A9 :                     ;
+     821/    51A9 : CD 41 52            TERM:	CALL	FACTR
+     822/    51AC : (MACRO)              MULT:	MTST	2AH,DIV
+     822/    51AC : CD 6B 4D                    CALL    TEST
+     822/    51AF : 2A                          DB      2AH
+     822/    51B0 : 2B                          DB      DIV-$-1
+     823/    51B1 : E5                  	PUSH	HL
+     824/    51B2 : CD 41 52            	CALL	FACTR
+     825/    51B5 : 06 00               	LD	B,00H
+     826/    51B7 : CD 26 52            	CALL	ABS
+     827/    51BA : EB                  	EX	DE,HL
+     828/    51BB : E3                  	EX	(SP),HL
+     829/    51BC : CD 26 52            	CALL	ABS
+     830/    51BF : 7C                  	LD	A,H
+     831/    51C0 : B7                  	OR	A
+     832/    51C1 : CA CA 51            	JP	Z,MULT1
+     833/    51C4 : 7A                  	LD	A,D
+     834/    51C5 : B2                  	OR	D
+     835/    51C6 : EB                  	EX	DE,HL
+     836/    51C7 : C2 23 53            	JP	NZ,ERHW1
+     837/    51CA : 7D                  MULT1:	LD	A,L
+     838/    51CB : 2E 00               	LD	L,0
+     839/    51CD : B7                  	OR	A
+     840/    51CE : CA FB 51            	JP	Z,TERM1
+     841/    51D1 : 19                  MULTL:	ADD	HL,DE
+     842/    51D2 : DA 23 53            	JP	C,ERHW1
+     843/    51D5 : 3D                  	DEC	A
+     844/    51D6 : C2 D1 51            	JP	NZ,MULTL
+     845/    51D9 : C3 FB 51            	JP	TERM1
+     846/    51DC : (MACRO)              DIV:	MTST	2FH,EXPRT
+     846/    51DC : CD 6B 4D                    CALL    TEST
+     846/    51DF : 2F                          DB      2FH
+     846/    51E0 : 3D                          DB      EXPRT-$-1
+     847/    51E1 : E5                  	PUSH	HL
+     848/    51E2 : CD 41 52            	CALL	FACTR
+     849/    51E5 : 06 00               	LD	B,00H
+     850/    51E7 : CD 26 52            	CALL	ABS
+     851/    51EA : EB                  	EX	DE,HL
+     852/    51EB : E3                  	EX	(SP),HL
+     853/    51EC : CD 26 52            	CALL	ABS
+     854/    51EF : 7A                  	LD	A,D
+     855/    51F0 : B3                  	OR	E
+     856/    51F1 : CA 23 53            	JP	Z,ERHW1
+     857/    51F4 : C5                  	PUSH	BC
+     858/    51F5 : CD 09 52            	CALL	DIVID
+     859/    51F8 : 60                  	LD	H,B
+     860/    51F9 : 69                  	LD	L,C
+     861/    51FA : C1                  	POP	BC
+     862/    51FB : D1                  TERM1:	POP	DE
+     863/    51FC : 7C                  	LD	A,H
+     864/    51FD : B7                  	OR	A
+     865/    51FE : FA 22 53            	JP	M,ERHOW
+     866/    5201 : 78                  	LD	A,B
+     867/    5202 : B7                  	OR	A
+     868/    5203 : FC 29 52            	CALL	M,TWSCP
+     869/    5206 : C3 AC 51            	JP	MULT
+     870/    5209 :                     ;
+     871/    5209 : E5                  DIVID:	PUSH	HL
+     872/    520A : 6C                  	LD	L,H
+     873/    520B : 26 00               	LD	H,00H
+     874/    520D : CD 14 52            	CALL	DIVSB
+     875/    5210 : 41                  	LD	B,C
+     876/    5211 : 7D                  	LD	A,L
+     877/    5212 : E1                  	POP	HL
+     878/    5213 : 67                  	LD	H,A
+     879/    5214 : 0E FF               DIVSB:	LD	C,0FFH
+     880/    5216 : 0C                  DIVS1:	INC	C
+     881/    5217 : CD 1F 52            	CALL	DIFF
+     882/    521A : D2 16 52            	JP	NC,DIVS1
+     883/    521D : 19                  	ADD	HL,DE
+     884/    521E : C9                  EXPRT:	RET
+     885/    521F :                     ;
+     886/    521F : 7D                  DIFF:	LD	A,L
+     887/    5220 : 93                  	SUB	E
+     888/    5221 : 6F                  	LD	L,A
+     889/    5222 : 7C                  	LD	A,H
+     890/    5223 : 9A                  	SBC	A,D
+     891/    5224 : 67                  	LD	H,A
+     892/    5225 : C9                  	RET
+     893/    5226 :                     ;
+     894/    5226 : 7C                  ABS:	LD	A,H
+     895/    5227 : B7                  	OR	A
+     896/    5228 : F0                  	RET	P
+     897/    5229 : 7C                  TWSCP:	LD	A,H
+     898/    522A : 2F                  	CPL
+     899/    522B : 67                  	LD	H,A
+     900/    522C : 7D                  	LD	A,L
+     901/    522D : 2F                  	CPL
+     902/    522E : 6F                  	LD	L,A
+     903/    522F : 23                  	INC	HL
+     904/    5230 : 78                  	LD	A,B
+     905/    5231 : EE 80               	XOR	80H
+     906/    5233 : 47                  	LD	B,A
+     907/    5234 : C9                  	RET
+     908/    5235 :                     ;
+     909/    5235 : 7C                  CMINT:	LD	A,H
+     910/    5236 : AA                  	XOR	D
+     911/    5237 : F2 3B 52            	JP	P,COMPR
+     912/    523A : EB                  	EX	DE,HL
+     913/    523B : 7C                  COMPR:	LD	A,H
+     914/    523C : BA                  	CP	D
+     915/    523D : C0                  	RET	NZ
+     916/    523E : 7D                  	LD	A,L
+     917/    523F : BB                  	CP	E
+     918/    5240 : C9                  	RET
+     919/    5241 :                     ;
+     920/    5241 : 21 46 52            FACTR:	LD	HL,FNKW-1
+     921/    5244 : C3 3B 4D            	JP	NXTKW
+     922/    5247 : (MACRO)              FNKW:	CASE_	"RND", RND
+     922/    5247 : 52 4E 44                    DB      "RND"
+     922/    524A : D2                          DB      (RND >> 8)+80H
+     922/    524B : 59                          DB      RND & 0FFH
+     923/    524C : (MACRO)              	CASE_	"ABS", FNABS
+     923/    524C : 41 42 53                    DB      "ABS"
+     923/    524F : D2                          DB      (FNABS >> 8)+80H
+     923/    5250 : 82                          DB      FNABS & 0FFH
+     924/    5251 : (MACRO)              	CASE_	"SIZE", RSIZE
+     924/    5251 : 53 49 5A 45                 DB      "SIZE"
+     924/    5255 : D2                          DB      (RSIZE >> 8)+80H
+     924/    5256 : 8E                          DB      RSIZE & 0FFH
+     925/    5257 : (MACRO)              	MENDC	VAR
+     925/    5257 : D2                          DB      (VAR + 8000H) >> 8
+     925/    5258 : 9B                          DB      VAR & 0FFH
+     926/    5259 :                     ;
+     927/    5259 : CD 0D 53            RND:	CALL	EXPR0
+     928/    525C : 7C                  	LD	A,H
+     929/    525D : B7                  	OR	A
+     930/    525E : FA 22 53            	JP	M,ERHOW
+     931/    5261 : B5                  	OR	L
+     932/    5262 : CA 22 53            	JP	Z,ERHOW
+     933/    5265 : D5                  	PUSH	DE
+     934/    5266 : E5                  	PUSH	HL
+     935/    5267 : 2A 12 80            	LD	HL,(RWRK)
+     936/    526A :                     ;;	INC	HL
+     937/    526A : 7C                  	LD	A,H
+     938/    526B : E6 07               	AND	07H
+     939/    526D : 67                  	LD	H,A
+     940/    526E :                     ;;	DEC	L
+     941/    526E : 11 00 4C            	LD	DE,ITOP	;
+     942/    5271 : 19                  	ADD	HL,DE	;
+     943/    5272 : 5E                  RND1:	LD	E,(HL)
+     944/    5273 : 23                  	INC	HL
+     945/    5274 : 56                  	LD	D,(HL)
+     946/    5275 : 22 12 80            	LD	(RWRK),HL
+     947/    5278 : E1                  	POP	HL
+     948/    5279 : EB                  	EX	DE,HL
+     949/    527A : C5                  	PUSH	BC
+     950/    527B : CD 09 52            	CALL	DIVID
+     951/    527E : C1                  	POP	BC
+     952/    527F : D1                  	POP	DE
+     953/    5280 : 23                  	INC	HL
+     954/    5281 : C9                  	RET
+     955/    5282 :                     ;
+     956/    5282 : CD 0D 53            FNABS:	CALL	EXPR0
+     957/    5285 : CD 26 52            	CALL	ABS
+     958/    5288 : 7C                  	LD	A,H
+     959/    5289 : B4                  	OR	H
+     960/    528A : FA 22 53            	JP	M,ERHOW
+     961/    528D : C9                  	RET
+     962/    528E :                     ;
+     963/    528E : 2A 00 80            RSIZE:	LD	HL,(OBTM)
+     964/    5291 : D5                  	PUSH	DE
+     965/    5292 : EB                  	EX	DE,HL
+     966/    5293 : 21 00 9D            	LD	HL,VALTOP
+     967/    5296 : CD 1F 52            	CALL	DIFF
+     968/    5299 : D1                  	POP	DE
+     969/    529A : C9                  	RET
+     970/    529B :                     ;
+     971/    529B : CD A6 52            VAR:	CALL	TSTV
+     972/    529E : DA 07 53            	JP	C,NUMB
+     973/    52A1 : 7E                  	LD	A,(HL)
+     974/    52A2 : 23                  	INC	HL
+     975/    52A3 : 66                  	LD	H,(HL)
+     976/    52A4 : 6F                  	LD	L,A
+     977/    52A5 : C9                  	RET
+     978/    52A6 :                     ;
+     979/    52A6 : CD 7F 4D            TSTV:	CALL	SKPBL
+     980/    52A9 : D6 40               	SUB	'@'
+     981/    52AB : D8                  	RET	C
+     982/    52AC : C2 CA 52            	JP	NZ,TSTV1
+     983/    52AF : 13                  	INC	DE
+     984/    52B0 : CD 0D 53            	CALL	EXPR0
+     985/    52B3 : 29                  	ADD	HL,HL
+     986/    52B4 : DA 22 53            	JP	C,ERHOW
+     987/    52B7 : D5                  	PUSH	DE
+     988/    52B8 : EB                  	EX	DE,HL
+     989/    52B9 : CD 8E 52            	CALL	RSIZE
+     990/    52BC : CD 3B 52            	CALL	COMPR
+     991/    52BF : DA 2A 53            	JP	C,ERSY1
+     992/    52C2 : 21 00 9D            	LD	HL,VALTOP
+     993/    52C5 : CD 1F 52            	CALL	DIFF
+     994/    52C8 : D1                  	POP	DE
+     995/    52C9 : C9                  	RET
+     996/    52CA : FE 1B               TSTV1:	CP	'Z'+1-'@'
+     997/    52CC : 3F                  	CCF
+     998/    52CD : D8                  	RET	C
+     999/    52CE : 13                  	INC	DE
+    1000/    52CF : 21 00 9D            	LD	HL,VALTOP
+    1001/    52D2 : 07                  	RLCA
+    1002/    52D3 : 85                  	ADD	A,L
+    1003/    52D4 : 6F                  	LD	L,A
+    1004/    52D5 : 3E 00               	LD	A,00H
+    1005/    52D7 : 8C                  	ADC	A,H
+    1006/    52D8 : 67                  	LD	H,A
+    1007/    52D9 : C9                  	RET
+    1008/    52DA :                     ;
+    1009/    52DA : 21 00 00            GINT:	LD	HL,0000H
+    1010/    52DD : 44                  	LD	B,H
+    1011/    52DE : CD 7F 4D            	CALL	SKPBL
+    1012/    52E1 : FE 30               GETI1:	CP	'0'
+    1013/    52E3 : D8                  	RET	C
+    1014/    52E4 : FE 3A               	CP	'9'+1
+    1015/    52E6 : D0                  	RET	NC
+    1016/    52E7 : 3E F0               	LD	A,0F0H
+    1017/    52E9 : A4                  	AND	H
+    1018/    52EA : C2 22 53            	JP	NZ,ERHOW
+    1019/    52ED : 04                  	INC	B
+    1020/    52EE : C5                  	PUSH	BC
+    1021/    52EF : 44                  	LD	B,H
+    1022/    52F0 : 4D                  	LD	C,L
+    1023/    52F1 : 29                  	ADD	HL,HL
+    1024/    52F2 : 29                  	ADD	HL,HL
+    1025/    52F3 : 09                  	ADD	HL,BC
+    1026/    52F4 : 29                  	ADD	HL,HL
+    1027/    52F5 : 1A                  	LD	A,(DE)
+    1028/    52F6 : 13                  	INC	DE
+    1029/    52F7 : E6 0F               	AND	0FH
+    1030/    52F9 : 85                  	ADD	A,L
+    1031/    52FA : 6F                  	LD	L,A
+    1032/    52FB : 3E 00               	LD	A,00H
+    1033/    52FD : 8C                  	ADC	A,H
+    1034/    52FE : 67                  	LD	H,A
+    1035/    52FF : C1                  	POP	BC
+    1036/    5300 : 1A                  	LD	A,(DE)
+    1037/    5301 : FA 22 53            	JP	M,ERHOW
+    1038/    5304 : C3 E1 52            	JP	GETI1
+    1039/    5307 :                     ;
+    1040/    5307 : CD DA 52            NUMB:	CALL	GINT
+    1041/    530A : 78                  	LD	A,B
+    1042/    530B : B7                  	OR	A
+    1043/    530C : C0                  	RET	NZ
+    1044/    530D :                     ;
+    1045/    530D : (MACRO)              EXPR0:	MTST	28H,ERWHT
+    1045/    530D : CD 6B 4D                    CALL    TEST
+    1045/    5310 : 28                          DB      28H
+    1045/    5311 : 09                          DB      ERWHT-$-1
+    1046/    5312 : CD 0E 51            	CALL	EEXPR
+    1047/    5315 : (MACRO)              	MTST	29H,ERWHT
+    1047/    5315 : CD 6B 4D                    CALL    TEST
+    1047/    5318 : 29                          DB      29H
+    1047/    5319 : 01                          DB      ERWHT-$-1
+    1048/    531A : C9                  	RET
+    1049/    531B :                     ;
+    1050/    531B : D5                  ERWHT:	PUSH	DE
+    1051/    531C : 11 60 53            ERWT1:	LD	DE,WHTMS
+    1052/    531F : C3 2D 53            	JP	LERMS
+    1053/    5322 : D5                  ERHOW:	PUSH	DE
+    1054/    5323 : 11 5B 53            ERHW1:	LD	DE,HOWMS
+    1055/    5326 : C3 2D 53            	JP	LERMS
+    1056/    5329 : D5                  ERSRY:	PUSH	DE
+    1057/    532A : 11 66 53            ERSY1:	LD	DE,SRYMS
+    1058/    532D : 97                  LERMS:	SUB	A
+    1059/    532E : CD A5 53            	CALL	MSG
+    1060/    5331 : D1                  	POP	DE
+    1061/    5332 : 1A                  	LD	A,(DE)
+    1062/    5333 : F5                  	PUSH	AF
+    1063/    5334 : 97                  	SUB	A
+    1064/    5335 : 12                  	LD	(DE),A
+    1065/    5336 : 2A 02 80            	LD	HL,(CLABL)
+    1066/    5339 : E5                  	PUSH	HL
+    1067/    533A : 7E                  	LD	A,(HL)
+    1068/    533B : 23                  	INC	HL
+    1069/    533C : B6                  	OR	(HL)
+    1070/    533D : D1                  	POP	DE
+    1071/    533E : CA 27 4C            	JP	Z,START
+    1072/    5341 : 7E                  	LD	A,(HL)
+    1073/    5342 : B7                  	OR	A
+    1074/    5343 : FA 35 50            	JP	M,ERRIN
+    1075/    5346 : CD 68 4F            	CALL	WLINE
+    1076/    5349 : 1B                  	DEC	DE
+    1077/    534A : F1                  	POP	AF
+    1078/    534B : 12                  	LD	(DE),A
+    1079/    534C : 3E 3F               	LD	A,'?'
+    1080/    534E : CD B5 53            	CALL	PUT
+    1081/    5351 : 97                  	SUB	A
+    1082/    5352 : CD A5 53            	CALL	MSG
+    1083/    5355 : C3 27 4C            	JP	START
+    1084/    5358 :                     ;
+    1085/    5358 : 4F 4B               OKMES:	DB	'OK'
+    1086/    535A : 0D                  	DB	0DH
+    1087/    535B : 48 4F 57 3F         HOWMS:	DB	'HOW?'
+    1088/    535F : 0D                  	DB	0DH
+    1089/    5360 : 57 48 41 54 3F      WHTMS:	DB	'WHAT?'
+    1090/    5365 : 0D                  	DB	0DH
+    1091/    5366 : 53 4F 52 52 59      SRYMS:	DB	'SORRY'
+    1092/    536B : 0D                  	DB	0DH
+    1093/    536C :                     ;
+    1094/    536C : 50 41 4C 4F 20 41   OPNMS1:	DB	'PALO ALTO '
+             5372 : 4C 54 4F 20       
+    1095/    5376 : 54 49 4E 59 20 42   	DB	'TINY BASIC'
+             537C : 41 53 49 43       
+    1096/    5380 : 0D                  	DB	0DH
+    1097/    5381 : 50 4F 52 54 41 42   OPNMS2:	DB	'PORTABLE '
+             5387 : 4C 45 20          
+    1098/    538A : 5A 38 30 20 56 45   	DB	'Z80 VERSION'
+             5390 : 52 53 49 4F 4E    
+    1099/    5395 : 0D                  	DB	0DH
+    1100/    5396 : 53 42 43 5A 38 30   OPNMS3:	DB	'SBCZ80 EDITION'
+             539C : 20 45 44 49 54 49 
+             53A2 : 4F 4E             
+    1101/    53A4 : 0D                  	DB	0DH
+    1102/    53A5 :                     ;
+    1103/    53A5 : 47                  MSG:	LD	B,A
+    1104/    53A6 : 1A                  MSG1:	LD	A,(DE)
+    1105/    53A7 : 13                  	INC	DE
+    1106/    53A8 : B8                  	CP	B
+    1107/    53A9 : C8                  	RET	Z
+    1108/    53AA : CD B5 53            	CALL	PUT
+    1109/    53AD : FE 0D               	CP	0DH
+    1110/    53AF : C2 A6 53            	JP	NZ,MSG1
+    1111/    53B2 : C9                  	RET
+    1112/    53B3 :                     ;
+    1113/    53B3 : 3E 0D               CRLF:	LD	A,0DH
+    1114/    53B5 : CF                  PUT:	RST	08H
+    1115/    53B6 :                     ;
+    1116/    53B6 : FE 0D               	CP	0DH
+    1117/    53B8 : C0                  	RET	NZ
+    1118/    53B9 : 3E 0A               	LD	A,0AH
+    1119/    53BB : CD B5 53            	CALL	PUT
+    1120/    53BE : 3E 0D               	LD	A,0DH
+    1121/    53C0 : C9                  	RET
+    1122/    53C1 :                     ;
+    1123/    53C1 : =53C1H               BREAK	EQU	$
+    1124/    53C1 : DF                  GET:	RST	18H
+    1125/    53C2 : C8                  	RET	Z
+    1126/    53C3 : D7                  	RST	10H
+    1127/    53C4 : FE 1B               	CP	ESC
+    1128/    53C6 : C0                  	ret	nz
+    1129/    53C7 :                     
+    1130/    53C7 :                     ;	JP	NZ,GET1
+    1131/    53C7 :                     
+    1132/    53C7 :                     ;	INC	SP
+    1133/    53C7 :                     ;	INC	SP
+    1134/    53C7 : C3 27 4C            	JP	START
+    1135/    53CA :                     ;
+    1136/    53CA : FE 61               GET1:	CP	'a'
+    1137/    53CC : D8                  	RET	C
+    1138/    53CD : FE 7B               	CP	'z'+1
+    1139/    53CF : D0                  	RET	NC
+    1140/    53D0 : E6 DF               	AND	11011111B
+    1141/    53D2 : C9                  	RET
+    1142/    53D3 :                     ;
+    1143/    53D3 : FF FF FF FF FF FF   	db	($ & 0FF00H)+100H-$ dup(0FFH)
+             53D9 : FF FF FF FF FF FF 
+             53DF : FF FF FF FF FF FF 
+             53E5 : FF FF FF FF FF FF 
+             53EB : FF FF FF FF FF FF 
+             53F1 : FF FF FF FF FF FF 
+             53F7 : FF FF FF FF FF FF 
+             53FD : FF FF FF          
+    1144/    5400 :                     
+    1145/    5400 : =>FALSE              	if SuperMEZ80
+    1146/    5400 :                     end_code:
+    1147/    5400 : =>TRUE               	else
+    1148/    8000 :                     	ORG	RAMTOP
+    1149/    8000 : [1145]               	endif
+    1150/    8000 :                     ;
+    1151/    8000 :                     OBTM:	DS	0002H
+    1152/    8002 :                     CLABL:	DS	0002H
+    1153/    8004 :                     RSTCK:	DS	0002H
+    1154/    8006 :                     NCNTR:	DS	0002H
+    1155/    8008 :                     FCNTR:	DS	0002H
+    1156/    800A :                     FSTPV:	DS	0002H
+    1157/    800C :                     FTOV:	DS	0002H
+    1158/    800E :                     FLABL:	DS	0002H
+    1159/    8010 :                     FOBJ:	DS	0002H
+    1160/    8012 :                     RWRK:	DS	0002H
+    1161/    8014 : =8014H               OTOP	EQU	$
+    1162/    8014 :                     ;
+    1163/    8014 :                     	END
+ AS V1.42 Beta [Bld 227] - Source File EMUZ80_ZTB.ASM - Page 2 - 1/17/2023 21:48:59
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+ ABS :                         5226 C |  ADDBL :                       5198 C |
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+ BREAK :                       53C1 - |  BS :                             8 - |
+ BYE :                         4DE0 C | *CASESENSITIVE :                  0 - |
+ CCAN :                        4CEC C |  CLABL :                       8002 C |
+ CMDKW :                       4D87 C |  CMINT :                       5235 C |
+*COMPMODE :                       0 - |  COMPR :                       523B C |
+*CONSTPI :        3.141592653589793 - |  CRLF :                        53B3 C |
+ CRUB :                        4CD3 C | *DATE :                 "1/17/2023" - |
+ DIFF :                        521F C |  DIV :                         51DC C |
+ DIVID :                       5209 C |  DIVS1 :                       5216 C |
+ DIVSB :                       5214 C |  EDITR :                       4C43 C |
+ EEXPR :                       510E C |  ENDL :                        50EC C |
+ ENTRY :                       4C06 C |  EQ1 :                         514A C |
+ ERHOW :                       5322 C |  ERHW1 :                       5323 C |
+ ERRIN :                       5035 C |  ERSRY :                       5329 C |
+ ERSY1 :                       532A C |  ERWHT :                       531B C |
+ ERWT1 :                       531C C |  ESC :                           1B - |
+ EXEQT :                       4D63 C |  EXPR :                        516D C |
+ EXPR0 :                       530D C |  EXPR1 :                       5178 C |
+ EXPR2 :                       5180 C |  EXPR3 :                       517D C |
+ EXPRT :                       521E C |  FACTR :                       5241 C |
+*FALSE :                          0 - |  FCNTR :                       8008 C |
+ FLABL :                       800E C |  FNABS :                       5282 C |
+ FNKW :                        5247 C |  FOBJ :                        8010 C |
+ FOR :                         4E2F C |  FOR0 :                        4E62 C |
+ FOR10 :                       4E9B C |  FOR3 :                        4E7A C |
+*FOR5 :                        4E8C C |  FORTO :                       4E45 C |
+ FSTEP :                       4E59 C |  FSTP1 :                       4E5F C |
+ FSTPV :                       800A C |  FTOV :                        800C C |
+*FULLPMMU :                       1 - |  GE1 :                         512F C |
+ GET :                         53C1 C |  GET1 :                        53CA C |
+ GETI1 :                       52E1 C |  GETL :                        4CA3 C |
+ GETL1 :                       4CA9 C |  GINT :                        52DA C |
+ GOSUB :                       4DF2 C |  GOTO :                        50BC C |
+ GT1 :                         513B C | *HAS64 :                          0 - |
+*HASFPU :                         0 - | *HASPMMU :                        0 - |
+ HOWMS :                       535B C |  IFEXQ :                       5158 C |
+ IFSTM :                       4F3C C | *INPT1 :                       5046 C |
+ INPT2 :                       504F C |  INPT4 :                       5061 C |
+ INPT6 :                       508A C |  INPUT :                       503F C |
+*INSRT :                       4C58 C | *INSUPMODE :                      0 - |
+ ITOP :                        4C00 - |  KWC1 :                        4D3F C |
+ KWCPR :                       4D38 C |  KWSK1 :                       4D52 C |
+ KWSK2 :                       4D5E C |  KWSRT :                       4D5C C |
+ KWSTP :                       4E51 C |  KWTO :                        4E3F C |
+ LBFSZ :                         50 - |  LBUF :                        9D37 - |
+ LBUFL :                         37 - |  LE1 :                         5142 C |
+ LERMS :                       532D C |  LERR :                        50EF C |
+ LET :                         509B C |  LETDF :                       5093 C |
+ LIST :                        4F50 C |  LISTL :                       4F59 C |
+*LISTON :                         1 - |  LT1 :                         5150 C |
+ LTSUB :                       50A6 C | *MACEXP :                         7 - |
+*MOMCPU :                        80 - | *MOMCPUNAME :                 "Z80" - |
+ MOVE :                        4C7A C |  MSG :                         53A5 C |
+ MSG1 :                        53A6 C |  MSTK :                        9D87 - |
+ MULT :                        51AC C |  MULT1 :                       51CA C |
+ MULTL :                       51D1 C |  NCNTR :                       8006 C |
+ NE1 :                         5135 C |  NEGA0 :                       518C C |
+ NEGA1 :                       5191 C | *NESTMAX :                      100 - |
+ NEW :                         4DE3 C |  NEXT :                        4EA2 C |
+ NEXT1 :                       4EAB C |  NEXT2 :                       4EC5 C |
+ NEXT4 :                       4EDD C |  NEXT5 :                       4EF1 C |
+ NOROP :                       5156 C |  NPOP :                        4F3A C |
+ NPSH :                        4F1D C |  NUMB :                        5307 C |
+ NXTGO :                       50E3 C |  NXTK1 :                       4D3E C |
+ NXTKW :                       4D3B C |  OBTM :                        8000 C |
+ OKMES :                       5358 C |  OPNMS1 :                      536C C |
+ OPNMS2 :                      5381 C |  OPNMS3 :                      5396 C |
+ OTOP :                        8014 - | *PADDING :                        1 - |
+ POPV :                        4F20 C |  PR11 :                        4FD4 C |
+ PR12 :                        4FEE C |  PR13 :                        4FCD C |
+ PR14 :                        4FE0 C |  PR15 :                        4FF2 C |
+ PRCMA :                       4FA7 C |  PRCR :                        4F8A C |
+ PREND :                       4FB2 C |  PREXP :                       4FB8 C |
+ PRINT :                       4F7D C |  PRLTR :                       4FA1 C |
+ PROMPT :                       '>' - | *PRSC :                        4F7F C |
+ PRSHA :                       4F95 C |  PRSUB :                       4FC3 C |
+ PSHV :                        4EF7 C |  PUT :                         53B5 C |
+ RAM12K :                         0 - |  RAM4K :                          0 - |
+ RAM8K :                          1 - |  RAMSIZ :                      2000 - |
+ RAMTOP :                      8000 - | *RELAXED :                        0 - |
+ REM :                         4F44 C |  RETRN :                       4E14 C |
+ RND :                         5259 C | *RND1 :                        5272 C |
+ ROPKW :                       5118 C |  RSIZE :                       528E C |
+ RSTCK :                       8004 C | *RUBOUT :                        7F - |
+ RUN :                         50CD C |  RUN1 :                        50D3 C |
+ RUN2 :                        50DC C |  RWRK :                        8012 C |
+ SKIPL :                       4D12 C |  SKPBL :                       4D7F C |
+ SKPL1 :                       4D13 C |  SKPL2 :                       4D14 C |
+ SMEZ80FULL :                     0 - |  SRCH :                        4CF4 C |
+ SRCH1 :                       4CFC C |  SRYMS :                       5366 C |
+ START :                       4C27 C |  STMKW :                       4D9C C |
+ STOP :                        4DEC C |  SUPERMEZ80 :                     0 - |
+ TERM :                        51A9 C |  TERM1 :                       51FB C |
+ TEST :                        4D6B C | *TIME :                  "21:48:59" - |
+ TMSTK :                       9DA5 - |  TR2 :                         4D29 C |
+ TR2E :                        4D31 C |  TRNSF :                       4D1E C |
+*TRUE :                           1 - |  TSCR1 :                       50FB C |
+ TSCR2 :                       5105 C |  TSRTN :                       5104 C |
+ TSTACK :                      9E80 - |  TSTEQ :                       4D7B C |
+ TSTSC :                       50F2 C |  TSTV :                        52A6 C |
+ TSTV1 :                       52CA C |  TWSCP :                       5229 C |
+ VALTOP :                      9D00 - |  VAR :                         529B C |
+*VERSION :                     142F - |  WHTMS :                       5360 C |
+ WINT :                        4FF3 C |  WINT1 :                       5003 C |
+ WINT2 :                       5004 C |  WINT3 :                       5014 C |
+ WINT4 :                       5015 C |  WINT5 :                       5023 C |
+ WINT6 :                       5028 C |  WLINE :                       4F68 C |
+ ZTBTOP :                      4C00 - |
+
+    218 symbols
+     27 unused symbols
+
+ AS V1.42 Beta [Bld 227] - Source File EMUZ80_ZTB.ASM - Page 3 - 1/17/2023 21:48:59
+
+
+  Defined Macros:
+  ---------------
+
+CASE_                                 | MENDC                                
+MTST                                  |
+
+      3 macros
+
+ AS V1.42 Beta [Bld 227] - Source File EMUZ80_ZTB.ASM - Page 4 - 1/17/2023 21:48:59
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.02 seconds assembly time
+
+   1164 lines source file
+   1312 lines incl. macro expansions
+      2 passes
+      0 errors
+      0 warnings
