@@ -8,14 +8,11 @@ PIC18F47Q84でRAMサイズを12Kまで拡張したファームウエアで
 RAM12K版のファームウェアは、メモリマップを以下の様に変更してあります。
 
 ROM 0000H - BFFFH (48K)
-
 RAM C000H - EFFFH (12K)
-
 I/O F000H - FFFFH (4K)
 
 (UART)
 FF00H	; UART DATA REGISTOR
-
 FF01H	; UART CONTROL REGISTOR
 
 ＣＬＣを8個使い、メモリの読み書きのベクター割り込み処理はデータ転送の最小限の
@@ -25,7 +22,6 @@ BASICのASCIIARTは、2.5MHZのZ80で1240秒程度でした。
 
 
 PIC18F47Q84_firmwareのフォルダにRAM8KとRAM12K用のファームとヘキサファイル
-
 があります。オリジナルメモリマップを使用すのであれば、RAM8Kを使用してください。
 
 一応PIC18F47Q43はRev.B03ではサポートしません。ROM、RAMの容量が足らないためです。
@@ -33,36 +29,38 @@ PIC18F47Q84_firmwareのフォルダにRAM8KとRAM12K用のファームとヘキ�
 Rev.B03では、SBCZ80データパックに収録されている
 
 ・GRANT's BASIC
-
 ・PALO ALTO TINY BASIC
 
 および、
 
 ・GAME80インタプリタ
-
 ・GAME80コンパイラ
 
 を搭載しました。モニタプログラムの＃コマンドで、ローンチすることが出来ます。
 
 BASICからは、MONITORコマンドでモニタに戻ります。
-
 TINY BASICからは、BYEコマンドでモニタに戻ります。
-
 GAME80インタプリタからは、>=3でモニタに戻ります。
-
-GAME80コンパイラは、GAME80インタプリタを呼び出すため、コンパイラ単体では
-
-動作できません。GAME80インタプリタから
-
->=$5B00
-
-で呼び出して、使用します。
 
 
 モニターの操作方法ですが、？コマンドで以下のヘルプが出ます。
-
 詳細は、MoniorDEbugCommand Document.txtを参照してください。
 
+　　? :Command Help
+　　#L|<num> :Launch program
+　　A[<address>] : Mini Assemble mode
+　　B[1|2[,<adr>]] :Set or List Break Point
+　　BC[1|2] :Clear Break Point
+　　D[<adr>] :Dump Memory
+　　DI[<adr>][,s<steps>|<adr>] :Disassemble
+　　G[<adr>][,<stop adr>] :Go and Stop
+　　L[G|<offset>] :Load HexFile (and GO)
+　　P[I|S] :Save HexFile(I:Intel,S:Motorola)
+　　R[<reg>] :Set or Dump register
+　　S[<adr>] :Set Memory
+　　T[<adr>][,<steps>|-1] : Trace command
+　　TM[I|S] :Trace Option for CALL
+　　TP[ON|OFF] :Trace Print Mode
 
 2022.10.15
 Rev.B02 リリース
@@ -74,11 +72,28 @@ Rev.B02.2 リリース
 
 2022.12.11
 Rev.B03 リリース
-
 ・アセンブルコマンド追加
-  
 ・PALO ALTO TINY BASIC
-  
 ・GAME80インタプリタ
-  
 ・GAME80コンパイラ
+
+2023.1.17
+Rev.B04 リリース
+
+・PICのファームウェアで、XON/XOFFフロー制御を実装しました。
+・LG(Load and Go)コマンド追加
+
+　　ヘキサファイルのロード後、ロードアドレスの先頭にジャンプするコマンドを
+　　追加しました。
+
+・その他、エラー表示の不具合箇所の修正
+
+2023.3.30
+Rev.B05 リリース
+
+・VTL言語のZ80版、VTLZ80を追加
+
+2023.5.9
+Rev.B05.5 リリース
+
+・GAME80をCP/M-80用にリリースしたGAME80IC Ver.03仕様に統一

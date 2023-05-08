@@ -1,0 +1,52 @@
+Copyright (c) 2023 Akihito Honda
+https://twitter.com/akih_san
+
+Released under the MIT license
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this
+software and associated documentation files (the “Software”), to deal in the Software
+without restriction, including without limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
+to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+EMUZ80は、電脳伝説様（https://vintagechips.wordpress.com/2022/03/05/emuz80_reference/）
+によって公開された最小構成で動くレトロなシングルボードコンピュータです。
+
+EMUZ80-MONは、このコンピューター上で動作するモニタープログラムです。
+
+このモニタープログラムは、asano様（https://electrelic.com/electrelic/node/1317）が公開
+されているUniversal Monitor（unimon-20220811）をベースに開発しています。
+
+EMUZ80-MONは、フリーライセンスで公開しています。ライセンスに関してはasano様のライセンス
+アグリーメントに準じます。変更、改変した際に発生する副次的な事象については、改変者が
+責任を持つこととします。
+
+EMUZ80-MONは、Macro Assembler AS V1.42(http://john.ccac.rwth-aachen.de:8000/as/)を
+使用して作成されています。使用許諾に関してはASのLicense Agreementに従うものとします。
+
+PICマイコンのプログラム作成については、Microchip Technology社のMPLAB X IDE v6.00を
+用いています。
+
+EMUZ80-MONで公開している。GRANT's BASIC, PALO ALTO TINY BASICについては、電脳伝説様が
+公開しているEMUZ80データパック及び、SBCZ80データパックのソースを使用しています。
+使用許諾については、電脳伝説様の使用条件に従うものとします。
+
+
+この素晴らしいレトロＰＣの世界に誘ってくれたEMUZ80を開発された電脳伝説様と、日々開発、
+改良に取り組んでいらっしゃる皆々様に感謝の意を表します。
+
+2022.10.31 Akihito. Honda
+Aki.h @akih_san
+https://twitter.com/akih_san
