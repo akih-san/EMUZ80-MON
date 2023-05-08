@@ -45,17 +45,17 @@ VTLZ80からは、DELキーを押した後に、リターンキーを押すと�
 <br>
 　　? :Command Help<br>
 　　#L|(num) :Launch program<br>
-　　A[<address>] :Mini Assemble mode<br>
-　　B[1|2[,<adr>]] :Set or List Break Point<br>
+　　A[(address)] :Mini Assemble mode<br>
+　　B[1|2[,(adr)]] :Set or List Break Point<br>
 　　BC[1|2] :Clear Break Point<br>
-　　D[<adr>] :Dump Memory<br>
-　　DI[<adr>][,s<steps>|<adr>] :Disassemble<br>
-　　G[<adr>][,<stop adr>] :Go and Stop<br>
-　　L[G|<offset>] :Load HexFile (and GO)<br>
+　　D[(adr)] :Dump Memory<br>
+　　DI[(adr)][,s(steps)|(adr)] :Disassemble<br>
+　　G[(adr)][,(stop adr)] :Go and Stop<br>
+　　L[G|(offset)] :Load HexFile (and GO)<br>
 　　P[I|S] :Save HexFile(I:Intel,S:Motorola)<br>
-　　R[<reg>] :Set or Dump register<br>
-　　S[<adr>] :Set Memory<br>
-　　T[<adr>][,<steps>|-1] : Trace command<br>
+　　R[(reg)] :Set or Dump register<br>
+　　S[(adr)] :Set Memory<br>
+　　T[(adr)][,(steps)|-1] : Trace command<br>
 　　TM[I|S] :Trace Option for CALL<br>
 　　TP[ON|OFF] :Trace Print Mode<br>
 <br>
