@@ -44,7 +44,7 @@ VTLZ80からは、DELキーを押した後に、リターンキーを押すと�
 詳細は、MoniorDEbugCommand Document.txtを参照してください。<br>
 <br>
 　　? :Command Help<br>
-　　#L|<num> :Launch program<br>
+　　#L|(num) :Launch program<br>
 　　A[<address>] :Mini Assemble mode<br>
 　　B[1|2[,<adr>]] :Set or List Break Point<br>
 　　BC[1|2] :Clear Break Point<br>
